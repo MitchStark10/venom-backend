@@ -10,4 +10,4 @@ app.get("/", async (req, res) => {
   res.json(lists);
 });
 
-export default app;
+module.exports = app;
