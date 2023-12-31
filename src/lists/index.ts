@@ -33,4 +33,15 @@ app.post("/", async (req, res) => {
   res.json(list);
 });
 
+app.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  const list = await prisma.list.delete({
+    where: {
+      id: Number(id),
+      userId: req.userId,
+    },
+  });
+  res.json(list);
+});
+
 module.exports = app;
