@@ -13,4 +13,24 @@ app.get("/", async (req, res) => {
   res.json(lists);
 });
 
+app.post("/", async (req, res) => {
+  const { listName } = req.body;
+
+  if (!listName) {
+    return res.status(400).json({ message: "listName is required" });
+  }
+
+  const list = await prisma.list.create({
+    data: {
+      listName,
+      user: {
+        connect: {
+          id: req.userId,
+        },
+      },
+    },
+  });
+  res.json(list);
+});
+
 module.exports = app;
