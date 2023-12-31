@@ -33,15 +33,44 @@ app.post("/", async (req, res) => {
   res.json(list);
 });
 
+app.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { listName } = req.body;
+
+  if (!listName) {
+    return res.status(400).json({ message: "listName is required" });
+  }
+
+  try {
+    const list = await prisma.list.update({
+      where: {
+        id: Number(id),
+        userId: req.userId,
+      },
+      data: {
+        listName,
+      },
+    });
+    res.json(list);
+  } catch (error) {
+    res.status(400).json({ message: "list not found" });
+  }
+});
+
 app.delete("/:id", async (req, res) => {
   const { id } = req.params;
-  const list = await prisma.list.delete({
-    where: {
-      id: Number(id),
-      userId: req.userId,
-    },
-  });
-  res.json(list);
+
+  try {
+    const list = await prisma.list.delete({
+      where: {
+        id: Number(id),
+        userId: req.userId,
+      },
+    });
+    res.json(list);
+  } catch (error) {
+    res.status(400).json({ message: "list not found" });
+  }
 });
 
 module.exports = app;
