@@ -1,8 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 const app = express();
+
+if (!process.env.JWT_SECRET) {
+  console.log("Error: JWT_SECRET not set");
+  process.exit(1);
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 app.post("/createUser", async (req, res) => {
   const { email, password } = req.body;
@@ -22,7 +30,8 @@ app.post("/createUser", async (req, res) => {
       },
     });
 
-    res.json(newUser);
+    const token = jwt.sign(newUser, JWT_SECRET);
+    res.json({ token });
   } catch (error: any) {
     console.log("Caught error during new user creation", error);
     if (error.code === "P2002" && error.meta.target.includes("email")) {
@@ -44,16 +53,18 @@ app.post("/login", async (req, res) => {
       email: email as string,
     },
   });
+
   if (!user) {
-    return res.status(400).send("User not found");
+    return res.status(400).send("User or password is incorrect.");
   }
 
   const match = bcrypt.compareSync(password, user.hashedPass);
   if (!match) {
-    return res.status(400).send("Incorrect password");
+    return res.status(400).send("User or password is incorrect.");
   }
 
-  res.json(user);
+  const token = jwt.sign(user, JWT_SECRET);
+  res.json({ token });
 });
 
 module.exports = app;
