@@ -2,7 +2,6 @@ import { User } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { readRequiredEnvVar } from "../lib/readRequiredEnvVar";
-import { AuthenticatedRequest } from "../types/express";
 
 export const authMiddleware = (
   req: Request,
@@ -21,8 +20,7 @@ export const authMiddleware = (
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const authenticatedRequest = req as AuthenticatedRequest;
-    authenticatedRequest.userId = (payload as User).id;
+    req.userId = (payload as User).id;
     next();
   });
 };
