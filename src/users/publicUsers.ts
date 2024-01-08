@@ -25,7 +25,7 @@ app.post("/createUser", async (req, res) => {
   try {
     const newUser = await prisma.user.create({
       data: {
-        email,
+        email: email.toLowerCase(),
         hashedPass,
       },
     });
@@ -50,7 +50,7 @@ app.post("/login", async (req, res) => {
   const bcrypt = require("bcrypt");
   const user = await prisma.user.findUnique({
     where: {
-      email: email as string,
+      email: (email as string).toLowerCase(),
     },
   });
 
