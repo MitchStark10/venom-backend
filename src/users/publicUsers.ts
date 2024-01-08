@@ -15,7 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 app.post("/createUser", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).send("Email and password are required");
+    return res.status(400).json({ erorr: "Email and password are required" });
   }
 
   const bcrypt = require("bcrypt");
@@ -44,7 +44,7 @@ app.post("/createUser", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).send("Email and password are required");
+    return res.status(400).json({ error: "Email and password are required" });
   }
 
   const bcrypt = require("bcrypt");
@@ -55,12 +55,12 @@ app.post("/login", async (req, res) => {
   });
 
   if (!user) {
-    return res.status(400).send("User or password is incorrect.");
+    return res.status(400).json({ error: "User or password is incorrect." });
   }
 
   const match = bcrypt.compareSync(password, user.hashedPass);
   if (!match) {
-    return res.status(400).send("User or password is incorrect.");
+    return res.status(400).json({ error: "User or password is incorrect." });
   }
 
   const token = jwt.sign(user, JWT_SECRET);
