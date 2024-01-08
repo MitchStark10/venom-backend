@@ -1,8 +1,18 @@
 import { PrismaClient } from "@prisma/client";
+import cors from "cors";
 import express from "express";
+
+const corsConfig = {
+  origin: "http://localhost:3000",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
 
 const prisma = new PrismaClient();
 const app = express();
+
+app.use(cors(corsConfig));
 
 app.get("/", async (req, res) => {
   const lists = await prisma.list.findMany({
