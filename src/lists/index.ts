@@ -30,6 +30,7 @@ app.post("/reorder", async (req, res) => {
             id: list.id,
           },
           data: {
+            listName: undefined,
             order: index,
           },
         });
