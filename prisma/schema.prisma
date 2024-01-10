@@ -22,4 +22,12 @@ model List {
   listName String
   userId   Int
   user     User   @relation(fields: [userId], references: [id])
+  tasks    Task[]
+}
+
+model Task {
+  id       Int    @id @default(autoincrement())
+  taskName String
+  listId   Int
+  list     List   @relation(fields: [listId], references: [id])
 }
