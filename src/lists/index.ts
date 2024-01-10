@@ -19,6 +19,29 @@ app.get("/", async (req, res) => {
   res.json(lists);
 });
 
+app.post("/reorder", async (req, res) => {
+  const { lists } = req.body;
+
+  try {
+    const updateLists = await Promise.all(
+      lists.map(async (list: any, index: number) => {
+        const updateList = await prisma.list.update({
+          where: {
+            id: list.id,
+          },
+          data: {
+            order: index,
+          },
+        });
+        return updateList;
+      })
+    );
+    res.json(updateLists);
+  } catch (error) {
+    res.status(400).json({ message: "list not found" });
+  }
+});
+
 app.post("/", async (req, res) => {
   const { listName } = req.body;
 

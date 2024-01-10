@@ -23,6 +23,7 @@ model List {
   userId   Int
   user     User   @relation(fields: [userId], references: [id])
   tasks    Task[]
+  order    Int    @default(0)
 }
 
 model Task {
