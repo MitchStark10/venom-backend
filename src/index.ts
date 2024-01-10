@@ -22,8 +22,8 @@ app.use("/users", require("./users/publicUsers"));
 
 app.use(authMiddleware);
 
-// TODO: Add auth middleware
 app.use("/lists", require("./lists"));
+app.use("/tasks", require("./tasks"));
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);

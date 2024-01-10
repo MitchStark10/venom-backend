@@ -5,13 +5,15 @@ const prisma = new PrismaClient();
 const app = express();
 
 app.get("/", async (req, res) => {
-  // TODO: Sort by id
   const lists = await prisma.list.findMany({
     where: {
       userId: req.userId,
     },
     orderBy: {
       id: "desc",
+    },
+    include: {
+      tasks: true,
     },
   });
   res.json(lists);
