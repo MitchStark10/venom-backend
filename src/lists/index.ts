@@ -9,9 +9,14 @@ app.get("/", async (req, res) => {
     where: {
       userId: req.userId,
     },
-    orderBy: {
-      id: "desc",
-    },
+    orderBy: [
+      {
+        order: "asc",
+      },
+      {
+        id: "asc",
+      },
+    ],
     include: {
       tasks: true,
     },
@@ -19,7 +24,7 @@ app.get("/", async (req, res) => {
   res.json(lists);
 });
 
-app.post("/reorder", async (req, res) => {
+app.put("/reorder", async (req, res) => {
   const { lists } = req.body;
 
   try {
@@ -28,6 +33,7 @@ app.post("/reorder", async (req, res) => {
         const updateList = await prisma.list.update({
           where: {
             id: list.id,
+            userId: req.userId,
           },
           data: {
             listName: undefined,
