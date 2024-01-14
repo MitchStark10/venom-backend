@@ -18,7 +18,11 @@ app.get("/", async (req, res) => {
       },
     ],
     include: {
-      tasks: true,
+      tasks: {
+        orderBy: {
+          order: "asc",
+        },
+      },
     },
   });
   res.json(lists);

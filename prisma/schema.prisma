@@ -29,6 +29,8 @@ model List {
 model Task {
   id       Int    @id @default(autoincrement())
   taskName String
-  listId   Int
-  list     List   @relation(fields: [listId], references: [id])
+  order    Int    @default(0)
+
+  listId Int
+  list   List @relation(fields: [listId], references: [id])
 }
