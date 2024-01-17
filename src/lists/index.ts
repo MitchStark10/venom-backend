@@ -20,7 +20,7 @@ app.get("/", async (req, res) => {
     include: {
       tasks: {
         orderBy: {
-          order: "asc",
+          listViewOrder: "asc",
         },
       },
     },
