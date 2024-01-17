@@ -6,12 +6,15 @@ import { authMiddleware } from "./middleware/authMiddleware";
 const app: Express = express();
 const port = process.env.PORT || 5000;
 
+const allowedDomain = process.env.CORS_ALLOWED_DOMAIN;
+
+if (!allowedDomain) {
+  throw new Error("Unable to initialize app. CORS_ALLOWED_DOMAIN is required");
+}
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      process.env.CORS_ALLOWED_DOMAIN
-    ],
+    origin: ["http://localhost:3000", allowedDomain],
   })
 );
 
