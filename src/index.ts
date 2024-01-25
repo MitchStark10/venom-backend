@@ -1,10 +1,12 @@
 import bodyParser from "body-parser";
 import cors from "cors";
+import dotenv from "dotenv";
 import express, { Express, Request, Response } from "express";
 import { authMiddleware } from "./middleware/authMiddleware";
 
 const app: Express = express();
 const port = process.env.PORT || 5000;
+dotenv.config();
 
 const allowedDomain = process.env.CORS_ALLOWED_DOMAIN;
 

@@ -100,7 +100,19 @@ app.put("/:id", async (req, res) => {
 app.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
+  if (!id) {
+    return res.status(400).json({ message: "id is required" });
+  }
+
   try {
+    await prisma.task.deleteMany({
+      where: {
+        list: {
+          id: Number(id),
+          userId: req.userId,
+        },
+      },
+    });
     const list = await prisma.list.delete({
       where: {
         id: Number(id),
@@ -109,7 +121,14 @@ app.delete("/:id", async (req, res) => {
     });
     res.json(list);
   } catch (error) {
-    res.status(400).json({ message: "list not found" });
+    res.status(400).json({
+      message: "An error occurred deleting the list.",
+      err: error,
+      details: {
+        id,
+        userId: req.userId,
+      },
+    });
   }
 });
 
