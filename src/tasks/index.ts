@@ -48,7 +48,7 @@ app.put("/reorder", async (req, res) => {
   try {
     const task = await prisma.task.update({
       where: {
-        id: taskId,
+        id: Number(taskId),
       },
       data: {
         [fieldToUpdate]: newOrder,
@@ -56,9 +56,10 @@ app.put("/reorder", async (req, res) => {
     });
     res.status(200).json(task);
   } catch (error) {
+    console.error("Error occurred updating task order", error);
     return res
       .status(500)
-      .json({ message: "Unexpected error occurred updating the order" });
+      .json({ message: "Unexpected error occurred updating the order", error });
   }
 });
 

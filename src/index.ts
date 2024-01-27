@@ -4,9 +4,9 @@ import dotenv from "dotenv";
 import express, { Express, Request, Response } from "express";
 import { authMiddleware } from "./middleware/authMiddleware";
 
+dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 5000;
-dotenv.config();
 
 const allowedDomain = process.env.CORS_ALLOWED_DOMAIN;
 
