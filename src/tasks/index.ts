@@ -32,6 +32,36 @@ app.post("/", async (req, res) => {
   res.json(task);
 });
 
+app.put("/reorder", async (req, res) => {
+  const { fieldToUpdate, taskId, newOrder } = req.body;
+
+  if (!fieldToUpdate || !taskId) {
+    return res
+      .status(400)
+      .json({ message: "fieldToUpdate and taskId are required" });
+  } else if (!["listViewOrder", "timeViewOrder"].includes(fieldToUpdate)) {
+    return res.status(400).json({
+      message: "fieldToUpdate must be either listViewOrder or timeViewOrder",
+    });
+  }
+
+  try {
+    const task = await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        [fieldToUpdate]: newOrder,
+      },
+    });
+    res.status(200).json(task);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Unexpected error occurred updating the order" });
+  }
+});
+
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { taskName } = req.body;
@@ -55,38 +85,6 @@ app.put("/:id", async (req, res) => {
     res.json(task);
   } catch (error) {
     res.status(400).json({ message: "task not found" });
-  }
-});
-
-app.put("/reorder", async (req, res) => {
-  const { fieldToUpdate, taskId, newOrder } = req.body;
-
-  if (!fieldToUpdate || !taskId) {
-    return res
-      .status(400)
-      .json({ message: "fieldToUpdate and taskId are required" });
-  } else if (!["listViewOrder", "timeViewOrder"].includes(fieldToUpdate)) {
-    return res
-      .status(400)
-      .json({
-        message: "fieldToUpdate must be either listViewOrder or timeViewOrder",
-      });
-  }
-
-  try {
-    const task = await prisma.task.update({
-      where: {
-        id: taskId,
-      },
-      data: {
-        [fieldToUpdate]: newOrder,
-      },
-    });
-    res.status(200).json(task);
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Unexpected error occurred updating the order" });
   }
 });
 
