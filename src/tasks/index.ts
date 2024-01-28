@@ -17,6 +17,9 @@ app.post("/", async (req, res) => {
       id: Number(listId),
       userId: req.userId,
     },
+    include: {
+      tasks: true,
+    },
   });
 
   if (!associatedList) {
@@ -28,6 +31,7 @@ app.post("/", async (req, res) => {
       taskName,
       listId,
       dueDate,
+      listViewOrder: associatedList.tasks.length,
     },
   });
 
