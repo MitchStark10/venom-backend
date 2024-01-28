@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import { isNullOrUndefined } from "../lib/isNullOrUndefined";
 
 const prisma = new PrismaClient();
 const app = express();
@@ -33,34 +34,41 @@ app.post("/", async (req, res) => {
 });
 
 app.put("/reorder", async (req, res) => {
-  const { fieldToUpdate, taskId, newOrder } = req.body;
+  const { tasksToUpdate } = req.body;
 
-  if (!fieldToUpdate || !taskId) {
-    return res
-      .status(400)
-      .json({ message: "fieldToUpdate and taskId are required" });
-  } else if (!["listViewOrder", "timeViewOrder"].includes(fieldToUpdate)) {
-    return res.status(400).json({
-      message: "fieldToUpdate must be either listViewOrder or timeViewOrder",
-    });
+  for (const task of tasksToUpdate) {
+    const { id, fieldToUpdate, newOrder } = task;
+
+    if (
+      isNullOrUndefined(id) ||
+      !fieldToUpdate ||
+      isNullOrUndefined(newOrder) ||
+      !["timeViewOrder", "listViewOrder"].includes(fieldToUpdate)
+    ) {
+      return res
+        .status(400)
+        .json({ message: "id, fieldToUpdate, and newOrder are required" });
+    }
+
+    try {
+      await prisma.task.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          [fieldToUpdate]: newOrder,
+        },
+      });
+    } catch (error) {
+      console.error("Error occurred updating task order", error);
+      return res.status(500).json({
+        message: "Unexpected error occurred updating the order",
+        error,
+      });
+    }
   }
 
-  try {
-    const task = await prisma.task.update({
-      where: {
-        id: Number(taskId),
-      },
-      data: {
-        [fieldToUpdate]: newOrder,
-      },
-    });
-    res.status(200).json(task);
-  } catch (error) {
-    console.error("Error occurred updating task order", error);
-    return res
-      .status(500)
-      .json({ message: "Unexpected error occurred updating the order", error });
-  }
+  res.status(200).json({ success: true });
 });
 
 app.put("/:id", async (req, res) => {
