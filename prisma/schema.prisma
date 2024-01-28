@@ -27,10 +27,11 @@ model List {
 }
 
 model Task {
-  id            Int    @id @default(autoincrement())
+  id            Int     @id @default(autoincrement())
   taskName      String
-  timeViewOrder Int    @default(0)
-  listViewOrder Int    @default(0)
+  timeViewOrder Int     @default(0)
+  listViewOrder Int     @default(0)
+  dueDate       String?
 
   listId Int
   list   List @relation(fields: [listId], references: [id])

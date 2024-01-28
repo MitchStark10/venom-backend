@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const app = express();
 
 app.post("/", async (req, res) => {
-  const { taskName, listId } = req.body;
+  const { taskName, listId, dueDate } = req.body;
 
   if (!taskName || !listId) {
     return res.status(400).json({ message: "title or listid is required" });
@@ -27,6 +27,7 @@ app.post("/", async (req, res) => {
     data: {
       taskName,
       listId,
+      dueDate,
     },
   });
 
@@ -73,10 +74,10 @@ app.put("/reorder", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { taskName } = req.body;
+  const { taskName, dueDate } = req.body;
 
-  if (!taskName) {
-    return res.status(400).json({ message: "title is required" });
+  if (!taskName && !dueDate) {
+    return res.status(400).json({ message: "taskName or dueDate is required" });
   }
 
   try {
@@ -89,11 +90,12 @@ app.put("/:id", async (req, res) => {
       },
       data: {
         taskName,
+        dueDate,
       },
     });
     res.json(task);
   } catch (error) {
-    res.status(400).json({ message: "task not found" });
+    res.status(400).json({ message: "error updating task", error });
   }
 });
 
