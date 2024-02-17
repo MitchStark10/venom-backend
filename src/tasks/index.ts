@@ -9,7 +9,7 @@ app.post("/", async (req, res) => {
   const { taskName, listId, dueDate } = req.body;
 
   if (!taskName || !listId) {
-    return res.status(400).json({ message: "title or listid is required" });
+    return res.status(400).json({ message: "taskName or listid is required" });
   }
 
   const associatedList = await prisma.list.findFirst({
@@ -78,7 +78,7 @@ app.put("/reorder", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { taskName, dueDate } = req.body;
+  const { taskName, dueDate, isCompleted } = req.body;
 
   if (!taskName && !dueDate) {
     return res.status(400).json({ message: "taskName or dueDate is required" });
@@ -95,6 +95,7 @@ app.put("/:id", async (req, res) => {
       data: {
         taskName,
         dueDate,
+        isCompleted,
       },
     });
     res.json(task);
