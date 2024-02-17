@@ -22,6 +22,9 @@ app.get("/", async (req, res) => {
         orderBy: {
           listViewOrder: "asc",
         },
+        where: {
+          isCompleted: false,
+        },
       },
     },
   });
