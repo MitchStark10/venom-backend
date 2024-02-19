@@ -128,9 +128,12 @@ app.get("/completed", async (req, res) => {
       where: {
         isCompleted: true,
       },
-      // orderBy: {
-      // timelineView: 'asc'
-      // },
+      orderBy: {
+        timeViewOrder: "asc",
+      },
+      include: {
+        list: true,
+      }
     });
     res.status(200).json(taskList);
   } catch (error) {
