@@ -38,6 +38,50 @@ app.post("/", async (req, res) => {
   res.json(task);
 });
 
+app.get("/completed", async (req, res) => {
+  try {
+    const taskList = await prisma.task.findMany({
+      where: {
+        isCompleted: true,
+        list: {
+          userId: req.userId,
+        },
+      },
+      orderBy: {
+        timeViewOrder: "asc",
+      },
+      include: {
+        list: true,
+      },
+    });
+    res.status(200).json(taskList);
+  } catch (error) {
+    console.error("Error occurred while retrieving completed tasks", error);
+    res
+      .status(400)
+      .json({ message: "Error occurred while retrieving completed tasks" });
+  }
+});
+
+app.delete("/completed", async (req, res) => {
+  try {
+    const tasks = await prisma.task.deleteMany({
+      where: {
+        isCompleted: true,
+        list: {
+          userId: req.userId,
+        },
+      },
+    });
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.error("Error occurred while deleting completed tasks", error);
+    res
+      .status(400)
+      .json({ message: "Error occurred while deleting completed tasks" });
+  }
+});
+
 app.put("/reorder", async (req, res) => {
   const { tasksToUpdate } = req.body;
 
@@ -119,50 +163,6 @@ app.delete("/:id", async (req, res) => {
     res.json(task);
   } catch (error) {
     res.status(400).json({ message: "task not found" });
-  }
-});
-
-app.get("/completed", async (req, res) => {
-  try {
-    const taskList = await prisma.task.findMany({
-      where: {
-        isCompleted: true,
-        list: {
-          userId: req.userId,
-        },
-      },
-      orderBy: {
-        timeViewOrder: "asc",
-      },
-      include: {
-        list: true,
-      },
-    });
-    res.status(200).json(taskList);
-  } catch (error) {
-    console.error("Error occurred while retrieving completed tasks", error);
-    res
-      .status(400)
-      .json({ message: "Error occurred while retrieving completed tasks" });
-  }
-});
-
-app.delete("/completed", async (req, res) => {
-  try {
-    const tasks = await prisma.task.deleteMany({
-      where: {
-        isCompleted: true,
-        list: {
-          userId: req.userId,
-        },
-      },
-    });
-    res.status(200).json(tasks);
-  } catch (error) {
-    console.error("Error occurred while deleting completed tasks", error);
-    res
-      .status(400)
-      .json({ message: "Error occurred while deleting completed tasks" });
   }
 });
 
