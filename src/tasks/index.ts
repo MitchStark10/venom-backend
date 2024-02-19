@@ -147,4 +147,23 @@ app.get("/completed", async (req, res) => {
   }
 });
 
+app.delete("/completed", async (req, res) => {
+  try {
+    const tasks = await prisma.task.deleteMany({
+      where: {
+        isCompleted: true,
+        list: {
+          userId: req.userId,
+        },
+      },
+    });
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.error("Error occurred while deleting completed tasks", error);
+    res
+      .status(400)
+      .json({ message: "Error occurred while deleting completed tasks" });
+  }
+});
+
 module.exports = app;
