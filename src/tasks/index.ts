@@ -127,13 +127,16 @@ app.get("/completed", async (req, res) => {
     const taskList = await prisma.task.findMany({
       where: {
         isCompleted: true,
+        list: {
+          userId: req.userId,
+        },
       },
       orderBy: {
         timeViewOrder: "asc",
       },
       include: {
         list: true,
-      }
+      },
     });
     res.status(200).json(taskList);
   } catch (error) {
