@@ -8,15 +8,15 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 5000;
 
-const allowedDomain = process.env.CORS_ALLOWED_DOMAIN;
+const allowedDomain = process.env.CORS_ALLOWED_DOMAINS;
 
 if (!allowedDomain) {
-  throw new Error("Unable to initialize app. CORS_ALLOWED_DOMAIN is required");
+  throw new Error("Unable to initialize app. CORS_ALLOWED_DOMAINS is required");
 }
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", allowedDomain],
+    origin: ["http://localhost:3000", ...allowedDomain.split(',')],
   })
 );
 
