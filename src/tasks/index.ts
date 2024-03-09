@@ -68,7 +68,7 @@ app.get("/today", async (req, res) => {
     const taskList = await prisma.task.findMany({
       where: {
         isCompleted: false,
-        dueDate: new Date().toString(), // TODO: This needs to be changed
+        dueDate: new Date(),
         list: {
           userId: req.userId,
         },
@@ -95,7 +95,7 @@ app.get("/upcoming", async (req, res) => {
       where: {
         isCompleted: false,
         dueDate: {
-          gt: new Date().toString(),
+          gt: new Date(),
         },
         list: {
           userId: req.userId,
