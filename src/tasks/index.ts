@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import express from "express";
+import { getDayWithoutTime } from "../lib/getDayWithoutTime";
+import { getTomorrowDate } from "../lib/getTomorrowDate";
 import { isNullOrUndefined } from "../lib/isNullOrUndefined";
 
 const prisma = new PrismaClient();
@@ -68,7 +70,10 @@ app.get("/today", async (req, res) => {
     const taskList = await prisma.task.findMany({
       where: {
         isCompleted: false,
-        dueDate: new Date(),
+        dueDate: {
+          gte: new Date(getDayWithoutTime()),
+          lt: new Date(getDayWithoutTime(getTomorrowDate())),
+        },
         list: {
           userId: req.userId,
         },
@@ -95,7 +100,7 @@ app.get("/upcoming", async (req, res) => {
       where: {
         isCompleted: false,
         dueDate: {
-          gt: new Date(),
+          gte: getDayWithoutTime(getTomorrowDate()),
         },
         list: {
           userId: req.userId,
