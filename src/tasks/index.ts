@@ -63,6 +63,60 @@ app.get("/completed", async (req, res) => {
   }
 });
 
+app.get("/today", async (req, res) => {
+  try {
+    const taskList = await prisma.task.findMany({
+      where: {
+        isCompleted: false,
+        dueDate: new Date().toString(), // TODO: This needs to be changed
+        list: {
+          userId: req.userId,
+        },
+      },
+      orderBy: {
+        timeViewOrder: "asc",
+      },
+      include: {
+        list: true,
+      },
+    });
+    res.status(200).json(taskList);
+  } catch (error) {
+    console.error("Error occurred while retrieving today tasks", error);
+    res
+      .status(400)
+      .json({ message: "Error occurred while retrieving completed tasks" });
+  }
+});
+
+app.get("/upcoming", async (req, res) => {
+  try {
+    const taskList = await prisma.task.findMany({
+      where: {
+        isCompleted: false,
+        dueDate: {
+          gt: new Date().toString(),
+        },
+        list: {
+          userId: req.userId,
+        },
+      },
+      orderBy: {
+        timeViewOrder: "asc",
+      },
+      include: {
+        list: true,
+      },
+    });
+    res.status(200).json(taskList);
+  } catch (error) {
+    console.error("Error occurred while retrieving upcoming tasks", error);
+    res
+      .status(400)
+      .json({ message: "Error occurred while retrieving upcoming tasks" });
+  }
+});
+
 app.delete("/completed", async (req, res) => {
   try {
     const tasks = await prisma.task.deleteMany({

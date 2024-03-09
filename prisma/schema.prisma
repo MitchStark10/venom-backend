@@ -27,12 +27,12 @@ model List {
 }
 
 model Task {
-  id            Int     @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   taskName      String
-  timeViewOrder Int     @default(0)
-  listViewOrder Int     @default(0)
-  dueDate       String?
-  isCompleted   Boolean @default(false)
+  timeViewOrder Int       @default(0)
+  listViewOrder Int       @default(0)
+  dueDate       DateTime?
+  isCompleted   Boolean   @default(false)
 
   listId Int
   list   List @relation(fields: [listId], references: [id])
