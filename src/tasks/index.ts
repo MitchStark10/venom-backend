@@ -66,13 +66,16 @@ app.get("/completed", async (req, res) => {
 });
 
 app.get("/today", async (req, res) => {
+  const gte = getDayWithoutTime(new Date());
+  const lt = getDayWithoutTime(getTomorrowDate());
+
   try {
     const taskList = await prisma.task.findMany({
       where: {
         isCompleted: false,
         dueDate: {
-          gte: new Date(getDayWithoutTime()),
-          lt: new Date(getDayWithoutTime(getTomorrowDate())),
+          gte: gte,
+          lt: lt,
         },
         list: {
           userId: req.userId,

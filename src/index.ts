@@ -10,13 +10,15 @@ const port = process.env.PORT || 5000;
 
 const allowedDomain = process.env.CORS_ALLOWED_DOMAINS;
 
-if (!allowedDomain) {
-  throw new Error("Unable to initialize app. CORS_ALLOWED_DOMAINS is required");
+const origins = ["http://localhost:3000"];
+
+if (allowedDomain) {
+  origins.push(...allowedDomain.split(","));
 }
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", ...allowedDomain.split(',')],
+    origin: origins,
   })
 );
 
