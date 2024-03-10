@@ -32,7 +32,7 @@ app.post("/", async (req, res) => {
     data: {
       taskName,
       listId,
-      dueDate,
+      dueDate: new Date(dueDate),
       listViewOrder: associatedList.tasks.length,
     },
   });
