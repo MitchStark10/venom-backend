@@ -32,7 +32,7 @@ app.post("/", async (req, res) => {
     data: {
       taskName,
       listId,
-      dueDate: dueDate ? getDayWithoutTime(new Date(dueDate)) : null,
+      dueDate,
       listViewOrder: associatedList.tasks.length,
     },
   });
