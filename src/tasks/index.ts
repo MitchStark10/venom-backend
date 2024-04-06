@@ -66,15 +66,13 @@ app.get("/completed", async (req, res) => {
 });
 
 app.get("/today", async (req, res) => {
-  const gte = getDayWithoutTime(new Date());
-  const lt = getDayWithoutTime(getTomorrowDate());
+  const lt = getDayWithoutTime(getTomorrowDate(req.query.today as string));
 
   try {
     const taskList = await prisma.task.findMany({
       where: {
         isCompleted: false,
         dueDate: {
-          gte: gte,
           lt: lt,
         },
         list: {
