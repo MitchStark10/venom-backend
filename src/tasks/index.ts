@@ -1,10 +1,9 @@
-import { PrismaClient } from "@prisma/client";
 import express from "express";
+import { extendedPrisma } from "../lib/extendedPrisma";
 import { getDayWithoutTime } from "../lib/getDayWithoutTime";
 import { getTomorrowDate } from "../lib/getTomorrowDate";
 import { isNullOrUndefined } from "../lib/isNullOrUndefined";
 
-const prisma = new PrismaClient();
 const app = express();
 
 app.post("/", async (req, res) => {
@@ -14,7 +13,7 @@ app.post("/", async (req, res) => {
     return res.status(400).json({ message: "taskName or listid is required" });
   }
 
-  const associatedList = await prisma.list.findFirst({
+  const associatedList = await extendedPrisma.list.findFirst({
     where: {
       id: Number(listId),
       userId: req.userId,
@@ -28,11 +27,11 @@ app.post("/", async (req, res) => {
     return res.status(400).json({ message: "list not found" });
   }
 
-  const task = await prisma.task.create({
+  const task = await extendedPrisma.task.create({
     data: {
       taskName,
       listId,
-      dueDate,
+      dueDate: dueDate ? new Date(dueDate) : null,
       listViewOrder: associatedList.tasks.length,
     },
   });
@@ -42,7 +41,7 @@ app.post("/", async (req, res) => {
 
 app.get("/completed", async (req, res) => {
   try {
-    const taskList = await prisma.task.findMany({
+    const taskList = await extendedPrisma.task.findMany({
       where: {
         isCompleted: true,
         list: {
@@ -69,7 +68,7 @@ app.get("/today", async (req, res) => {
   const lt = getDayWithoutTime(getTomorrowDate(req.query.today as string));
 
   try {
-    const taskList = await prisma.task.findMany({
+    const taskList = await extendedPrisma.task.findMany({
       where: {
         isCompleted: false,
         dueDate: {
@@ -97,7 +96,7 @@ app.get("/today", async (req, res) => {
 
 app.get("/upcoming", async (req, res) => {
   try {
-    const taskList = await prisma.task.findMany({
+    const taskList = await extendedPrisma.task.findMany({
       where: {
         isCompleted: false,
         dueDate: {
@@ -125,7 +124,7 @@ app.get("/upcoming", async (req, res) => {
 
 app.delete("/completed", async (req, res) => {
   try {
-    const tasks = await prisma.task.deleteMany({
+    const tasks = await extendedPrisma.task.deleteMany({
       where: {
         isCompleted: true,
         list: {
@@ -160,7 +159,7 @@ app.put("/reorder", async (req, res) => {
     }
 
     try {
-      await prisma.task.update({
+      await extendedPrisma.task.update({
         where: {
           id: Number(id),
         },
@@ -189,7 +188,7 @@ app.put("/:id", async (req, res) => {
   }
 
   try {
-    const task = await prisma.task.update({
+    const task = await extendedPrisma.task.update({
       where: {
         id: Number(id),
         list: {
@@ -198,7 +197,7 @@ app.put("/:id", async (req, res) => {
       },
       data: {
         taskName,
-        dueDate,
+        dueDate: dueDate ? new Date(dueDate) : null,
         isCompleted,
       },
     });
@@ -212,7 +211,7 @@ app.delete("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const task = await prisma.task.delete({
+    const task = await extendedPrisma.task.delete({
       where: {
         id: Number(id),
         list: {

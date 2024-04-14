@@ -1,11 +1,10 @@
-import { PrismaClient } from "@prisma/client";
 import express from "express";
+import { extendedPrisma } from "../lib/extendedPrisma";
 
-const prisma = new PrismaClient();
 const app = express();
 
 app.get("/", async (req, res) => {
-  const lists = await prisma.list.findMany({
+  const lists = await extendedPrisma.list.findMany({
     where: {
       userId: req.userId,
     },
@@ -37,7 +36,7 @@ app.put("/reorder", async (req, res) => {
   try {
     const updateLists = await Promise.all(
       lists.map(async (list: any, index: number) => {
-        const updateList = await prisma.list.update({
+        const updateList = await extendedPrisma.list.update({
           where: {
             id: list.id,
             userId: req.userId,
@@ -63,7 +62,7 @@ app.post("/", async (req, res) => {
     return res.status(400).json({ message: "listName is required" });
   }
 
-  const list = await prisma.list.create({
+  const list = await extendedPrisma.list.create({
     data: {
       listName,
       user: {
@@ -85,7 +84,7 @@ app.put("/:id", async (req, res) => {
   }
 
   try {
-    const list = await prisma.list.update({
+    const list = await extendedPrisma.list.update({
       where: {
         id: Number(id),
         userId: req.userId,
@@ -108,7 +107,7 @@ app.delete("/:id", async (req, res) => {
   }
 
   try {
-    await prisma.task.deleteMany({
+    await extendedPrisma.task.deleteMany({
       where: {
         list: {
           id: Number(id),
@@ -116,7 +115,7 @@ app.delete("/:id", async (req, res) => {
         },
       },
     });
-    const list = await prisma.list.delete({
+    const list = await extendedPrisma.list.delete({
       where: {
         id: Number(id),
         userId: req.userId,

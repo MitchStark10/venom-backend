@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
 import express from "express";
 import jwt from "jsonwebtoken";
+import { extendedPrisma } from "../lib/extendedPrisma";
 
-const prisma = new PrismaClient();
 const app = express();
 
 if (!process.env.JWT_SECRET) {
@@ -23,7 +22,7 @@ app.post("/createUser", async (req, res) => {
   const hashedPass = bcrypt.hashSync(password, salt);
 
   try {
-    const newUser = await prisma.user.create({
+    const newUser = await extendedPrisma.user.create({
       data: {
         email: email.toLowerCase(),
         hashedPass,
@@ -48,7 +47,7 @@ app.post("/login", async (req, res) => {
   }
 
   const bcrypt = require("bcrypt");
-  const user = await prisma.user.findUnique({
+  const user = await extendedPrisma.user.findUnique({
     where: {
       email: (email as string).toLowerCase(),
     },
