@@ -197,7 +197,7 @@ app.put("/:id", async (req, res) => {
       },
       data: {
         taskName,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        dueDate: dueDate ? new Date(dueDate) : dueDate,
         isCompleted,
       },
     });
