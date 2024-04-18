@@ -95,12 +95,15 @@ app.get("/today", async (req, res) => {
 });
 
 app.get("/upcoming", async (req, res) => {
+  const tomorrowDate = getDayWithoutTime(
+    getTomorrowDate(req.query.today as string)
+  );
   try {
     const taskList = await extendedPrisma.task.findMany({
       where: {
         isCompleted: false,
         dueDate: {
-          gte: getDayWithoutTime(getTomorrowDate()),
+          gte: tomorrowDate,
         },
         list: {
           userId: req.userId,
