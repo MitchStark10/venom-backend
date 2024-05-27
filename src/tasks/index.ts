@@ -168,7 +168,7 @@ app.put("/reorder", async (req, res) => {
         },
         data: {
           [fieldToUpdate]: newOrder,
-          dueDate: newDueDate,
+          dueDate: newDueDate ? new Date(newDueDate) : undefined,
         },
       });
     } catch (error) {
