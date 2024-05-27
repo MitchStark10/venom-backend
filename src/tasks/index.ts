@@ -148,7 +148,7 @@ app.put("/reorder", async (req, res) => {
   const { tasksToUpdate } = req.body;
 
   for (const task of tasksToUpdate) {
-    const { id, fieldToUpdate, newOrder } = task;
+    const { id, fieldToUpdate, newOrder, newDueDate } = task;
 
     if (
       isNullOrUndefined(id) ||
@@ -168,6 +168,7 @@ app.put("/reorder", async (req, res) => {
         },
         data: {
           [fieldToUpdate]: newOrder,
+          dueDate: newDueDate,
         },
       });
     } catch (error) {
