@@ -15,6 +15,7 @@ model User {
   email      String @unique
   hashedPass String
   lists      List[]
+  Tag        Tag[]
 }
 
 model List {
@@ -34,6 +35,27 @@ model Task {
   dueDate       DateTime?
   isCompleted   Boolean   @default(false)
 
-  listId Int
-  list   List @relation(fields: [listId], references: [id])
+  listId  Int
+  list    List      @relation(fields: [listId], references: [id])
+  TaskTag TaskTag[]
+}
+
+model Tag {
+  id       Int    @id @default(autoincrement())
+  tagName  String
+  tagColor String
+
+  userId  Int
+  user    User      @relation(fields: [userId], references: [id])
+  TaskTag TaskTag[]
+}
+
+model TaskTag {
+  taskId Int
+  task   Task @relation(fields: [taskId], references: [id])
+
+  tagId Int
+  tag   Tag @relation(fields: [tagId], references: [id])
+
+  @@id([taskId, tagId])
 }

@@ -7,7 +7,7 @@ import { isNullOrUndefined } from "../lib/isNullOrUndefined";
 const app = express();
 
 app.post("/", async (req, res) => {
-  const { taskName, listId, dueDate } = req.body;
+  const { taskName, listId, dueDate, tagIds } = req.body;
 
   if (!taskName || !listId) {
     return res.status(400).json({ message: "taskName or listid is required" });
@@ -35,6 +35,15 @@ app.post("/", async (req, res) => {
       listViewOrder: associatedList.tasks.length,
     },
   });
+
+  if (tagIds?.length > 0) {
+    extendedPrisma.taskTag.createMany({
+      data: tagIds.map((tagId: number) => ({
+        taskId: task.id,
+        tagId,
+      })),
+    });
+  }
 
   res.json(task);
 });
@@ -185,7 +194,7 @@ app.put("/reorder", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { taskName, dueDate, isCompleted } = req.body;
+  const { taskName, dueDate, isCompleted, tagIds } = req.body;
 
   if (!taskName && !dueDate) {
     return res.status(400).json({ message: "taskName or dueDate is required" });
@@ -205,6 +214,22 @@ app.put("/:id", async (req, res) => {
         isCompleted,
       },
     });
+
+    await extendedPrisma.taskTag.deleteMany({
+      where: {
+        taskId: task.id,
+      },
+    });
+
+    if (tagIds?.length > 0) {
+      extendedPrisma.taskTag.createMany({
+        data: tagIds.map((tagId: number) => ({
+          taskId: task.id,
+          tagId,
+        })),
+      });
+    }
+
     res.json(task);
   } catch (error) {
     res.status(400).json({ message: "error updating task", error });
