@@ -25,6 +25,30 @@ app.delete("/:id", async (req, res) => {
   });
 });
 
+app.put("/:id", async (req, res) => {
+  const idToUpdate = Number(req.params.id);
+  const { tagColor, tagName } = req.body;
+
+  if (!tagColor || !tagName) {
+    return res.status(400).json({
+      error: "tagName and tagColor are required.",
+    });
+  }
+
+  const updatedTag = await extendedPrisma.tag.update({
+    where: {
+      id: idToUpdate,
+      userId: req.userId,
+    },
+    data: {
+      tagName,
+      tagColor,
+    },
+  });
+
+  res.status(200).json(updatedTag);
+});
+
 app.get("/", async (req, res) => {
   const tags = await extendedPrisma.tag.findMany({
     where: {
@@ -40,7 +64,7 @@ app.post("/", async (req, res) => {
 
   if (!tagName || !tagColor) {
     return res.status(400).json({
-      error: "tagName is required",
+      error: "tagName and tagColor are required.",
     });
   }
 
