@@ -37,7 +37,7 @@ app.post("/", async (req, res) => {
   });
 
   if (tagIds?.length > 0) {
-    extendedPrisma.taskTag.createMany({
+    await extendedPrisma.taskTag.createMany({
       data: tagIds.map((tagId: number) => ({
         taskId: task.id,
         tagId,
@@ -62,6 +62,7 @@ app.get("/completed", async (req, res) => {
       },
       include: {
         list: true,
+        taskTag: true,
       },
     });
     res.status(200).json(taskList);
@@ -92,6 +93,7 @@ app.get("/today", async (req, res) => {
       },
       include: {
         list: true,
+        taskTag: true,
       },
     });
     res.status(200).json(taskList);
@@ -123,6 +125,7 @@ app.get("/upcoming", async (req, res) => {
       },
       include: {
         list: true,
+        taskTag: true,
       },
     });
     res.status(200).json(taskList);
@@ -196,6 +199,8 @@ app.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { taskName, dueDate, isCompleted, tagIds } = req.body;
 
+  console.log("received tag ids", tagIds);
+
   if (!taskName && !dueDate) {
     return res.status(400).json({ message: "taskName or dueDate is required" });
   }
@@ -222,7 +227,7 @@ app.put("/:id", async (req, res) => {
     });
 
     if (tagIds?.length > 0) {
-      extendedPrisma.taskTag.createMany({
+      await extendedPrisma.taskTag.createMany({
         data: tagIds.map((tagId: number) => ({
           taskId: task.id,
           tagId,

@@ -24,6 +24,9 @@ app.get("/", async (req, res) => {
         where: {
           isCompleted: false,
         },
+        include: {
+          taskTag: true,
+        },
       },
     },
   });
