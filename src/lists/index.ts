@@ -25,7 +25,11 @@ app.get("/", async (req, res) => {
           isCompleted: false,
         },
         include: {
-          taskTag: true,
+          taskTag: {
+            include: {
+              tag: true,
+            },
+          },
         },
       },
     },

@@ -62,7 +62,11 @@ app.get("/completed", async (req, res) => {
       },
       include: {
         list: true,
-        taskTag: true,
+        taskTag: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
     res.status(200).json(taskList);
@@ -93,7 +97,11 @@ app.get("/today", async (req, res) => {
       },
       include: {
         list: true,
-        taskTag: true,
+        taskTag: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
     res.status(200).json(taskList);
@@ -125,7 +133,11 @@ app.get("/upcoming", async (req, res) => {
       },
       include: {
         list: true,
-        taskTag: true,
+        taskTag: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
     res.status(200).json(taskList);
