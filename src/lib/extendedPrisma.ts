@@ -1,4 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Task, TaskTag } from "@prisma/client";
+
+interface ExtendedTaskWithTags extends Task {
+  taskTag?: TaskTag[];
+}
 
 export const extendedPrisma = new PrismaClient().$extends({
   result: {
@@ -6,6 +10,11 @@ export const extendedPrisma = new PrismaClient().$extends({
       dueDate: {
         compute(data) {
           return data.dueDate ? data.dueDate.toISOString().split("T")[0] : null;
+        },
+      },
+      tagIds: {
+        compute(data: ExtendedTaskWithTags) {
+          return data.taskTag?.map((taskTag) => taskTag.tagId);
         },
       },
     },
