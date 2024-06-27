@@ -151,6 +151,17 @@ app.get("/upcoming", async (req, res) => {
 
 app.delete("/completed", async (req, res) => {
   try {
+    await extendedPrisma.taskTag.deleteMany({
+      where: {
+        task: {
+          isCompleted: true,
+          list: {
+            userId: req.userId,
+          },
+        },
+      },
+    });
+
     const tasks = await extendedPrisma.task.deleteMany({
       where: {
         isCompleted: true,
