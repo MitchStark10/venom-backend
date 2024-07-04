@@ -20,7 +20,7 @@ model User {
 
 model List {
   id       Int    @id @default(autoincrement())
-  listName String
+  listName String @unique
   userId   Int
   user     User   @relation(fields: [userId], references: [id])
   tasks    Task[]
