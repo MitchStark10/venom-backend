@@ -66,7 +66,18 @@ app.post("/", async (req, res) => {
   const { listName } = req.body;
 
   if (!listName) {
-    return res.status(400).json({ message: "listName is required" });
+    return res.status(400).json({ message: "List name is required" });
+  }
+
+  const existingListsWithThatName = await extendedPrisma.list.findFirst({
+    where: {
+      listName,
+      userId: req.userId,
+    },
+  });
+
+  if (existingListsWithThatName) {
+    return res.status(400).json({ message: "List name must be unique" });
   }
 
   const list = await extendedPrisma.list.create({
