@@ -220,9 +220,7 @@ app.put("/reorder", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { taskName, dueDate, isCompleted, tagIds } = req.body;
-
-  console.log("received tag ids", tagIds);
+  const { listId, taskName, dueDate, isCompleted, tagIds } = req.body;
 
   if (!taskName && !dueDate) {
     return res.status(400).json({ message: "taskName or dueDate is required" });
@@ -240,6 +238,7 @@ app.put("/:id", async (req, res) => {
         taskName,
         dueDate: dueDate ? new Date(dueDate) : dueDate,
         isCompleted,
+        listId: listId,
       },
     });
 
