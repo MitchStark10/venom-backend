@@ -10,21 +10,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AutoDeleteTasksOptions {
+  NEVER
+  ONE_DAY
+  ONE_WEEK
+  ONE_MONTH
+}
+
 model User {
-  id         Int    @id @default(autoincrement())
-  email      String @unique
-  hashedPass String
-  lists      List[]
-  Tag        Tag[]
+  id               Int                    @id @default(autoincrement())
+  email            String                 @unique
+  hashedPass       String
+  autoDeleteTasks  AutoDeleteTasksOptions @default(NEVER)
+  listsForStandups List[]                 @relation("listsForStandups")
+  lists            List[]                 @relation("userLists")
+  Tag              Tag[]
 }
 
 model List {
   id       Int    @id @default(autoincrement())
   listName String
   userId   Int
-  user     User   @relation(fields: [userId], references: [id])
+  user     User   @relation(fields: [userId], references: [id], name: "userLists", map: "List_userId_userLists_fkey")
   tasks    Task[]
   order    Int    @default(0)
+  User     User   @relation(fields: [userId], references: [id], name: "listsForStandups", map: "List_userId_listsForStandups_fkey")
 }
 
 model Task {
