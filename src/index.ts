@@ -35,6 +35,7 @@ app.use(authMiddleware);
 app.use("/lists", require("./lists"));
 app.use("/tasks", require("./tasks"));
 app.use("/tags", require("./tags"));
+app.use("/settings", require("./settings/settings"));
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
