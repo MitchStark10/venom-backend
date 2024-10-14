@@ -95,7 +95,7 @@ app.post("/", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { listName } = req.body;
+  const { listName, isStandupList } = req.body;
 
   if (!listName) {
     return res.status(400).json({ message: "listName is required" });
@@ -109,6 +109,8 @@ app.put("/:id", async (req, res) => {
       },
       data: {
         listName,
+        isStandupList:
+          isStandupList !== undefined ? Boolean(isStandupList) : undefined,
       },
     });
     res.json(list);
