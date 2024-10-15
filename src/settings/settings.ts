@@ -8,17 +8,6 @@ const select = {
   autoDeleteTasks: true,
 };
 
-app.get("/", async (req, res) => {
-  const user = await extendedPrisma.user.findFirst({
-    where: {
-      id: req.userId,
-    },
-    select,
-  });
-
-  res.status(200).json(user);
-});
-
 const autoDeleteTasksValueToEnumMap: Record<any, AutoDeleteTasksOptions> = {
   "-1": AutoDeleteTasksOptions.NEVER,
   "7": AutoDeleteTasksOptions.ONE_WEEK,
@@ -32,6 +21,28 @@ const autoDeleteTasksEnumToValueMap: Record<AutoDeleteTasksOptions, string> = {
   [AutoDeleteTasksOptions.TWO_WEEKS]: "14",
   [AutoDeleteTasksOptions.ONE_MONTH]: "30",
 };
+
+const normalizeUser = (
+  user: { id: number; autoDeleteTasks: AutoDeleteTasksOptions } | null
+) => ({
+  ...user,
+  autoDeleteTasks: user
+    ? autoDeleteTasksEnumToValueMap[user.autoDeleteTasks]
+    : null,
+});
+
+app.get("/", async (req, res) => {
+  const user = await extendedPrisma.user.findFirst({
+    where: {
+      id: req.userId,
+    },
+    select,
+  });
+
+  res.status(200).json(normalizeUser(user));
+});
+
+
 
 app.put("/", async (req, res) => {
   const { autoDeleteTasks } = req.body;
@@ -55,10 +66,8 @@ app.put("/", async (req, res) => {
     select,
   });
 
-  res.status(200).json({
-    ...user,
-    autoDeleteTasks: autoDeleteTasksEnumToValueMap[user.autoDeleteTasks],
-  });
+  res.status(200).json(normalizeUser(user));
 });
 
 module.exports = app;
+
