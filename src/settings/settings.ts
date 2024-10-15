@@ -19,17 +19,24 @@ app.get("/", async (req, res) => {
   res.status(200).json(user);
 });
 
-const autoDeleteTasksMap: Record<any, AutoDeleteTasksOptions> = {
+const autoDeleteTasksValueToEnumMap: Record<any, AutoDeleteTasksOptions> = {
   "-1": AutoDeleteTasksOptions.NEVER,
   "7": AutoDeleteTasksOptions.ONE_WEEK,
   "14": AutoDeleteTasksOptions.TWO_WEEKS,
   "30": AutoDeleteTasksOptions.ONE_MONTH,
 };
 
+const autoDeleteTasksEnumToValueMap: Record<AutoDeleteTasksOptions, string> = {
+  AutoDeleteTasksOptions.NEVER: "-1",
+  AutoDeleteTasksOptions.ONE_WEEK: "7",
+  AutoDeleteTasksOptions.TWO_WEEKS: "14",
+  AutoDeleteTasksOptions.ONE_MONTH: "30",
+};
+
 app.put("/", async (req, res) => {
   const { autoDeleteTasks } = req.body;
 
-  const autoDeleteTasksEnumValue = autoDeleteTasksMap[autoDeleteTasks];
+  const autoDeleteTasksEnumValue = autoDeleteTasksValueToEnumMap[autoDeleteTasks];
 
   if (!autoDeleteTasksEnumValue) {
     return res.status(400).json({
@@ -47,7 +54,10 @@ app.put("/", async (req, res) => {
     select,
   });
 
-  res.status(200).json(user);
+  res.status(200).json({
+    ...user,
+    autoDeleteTasks: autoDeleteTasksEnumToValueMap[user.autoDeleteTasks]
+  });
 });
 
 module.exports = app;
