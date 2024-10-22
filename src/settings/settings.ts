@@ -42,10 +42,8 @@ app.get("/", async (req, res) => {
   res.status(200).json(normalizeUser(user));
 });
 
-
-
 app.put("/", async (req, res) => {
-  const { autoDeleteTasks } = req.body;
+  const { autoDeleteTasks, standupListIds } = req.body;
 
   const autoDeleteTasksEnumValue =
     autoDeleteTasksValueToEnumMap[autoDeleteTasks];
@@ -66,8 +64,33 @@ app.put("/", async (req, res) => {
     select,
   });
 
+  if (standupListIds) {
+    await extendedPrisma.list.updateMany({
+      where: {
+        id: {
+          in: standupListIds,
+        },
+        userId: req.userId,
+      },
+      data: {
+        isStandupList: true,
+      },
+    });
+
+    await extendedPrisma.list.updateMany({
+      where: {
+        id: {
+          notIn: standupListIds,
+        },
+        userId: req.userId,
+      },
+      data: {
+        isStandupList: false,
+      },
+    });
+  }
+
   res.status(200).json(normalizeUser(user));
 });
 
 module.exports = app;
-
