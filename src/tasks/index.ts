@@ -241,6 +241,7 @@ app.put("/:id", async (req, res) => {
         taskName,
         dueDate: dueDate ? new Date(dueDate) : dueDate,
         isCompleted,
+        dateCompleted: isCompleted ? getDayWithoutTime() : null,
       },
     });
 

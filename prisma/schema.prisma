@@ -42,6 +42,7 @@ model Task {
   timeViewOrder Int       @default(0)
   listViewOrder Int       @default(0)
   dueDate       DateTime?
+  dateCompleted DateTime?
   isCompleted   Boolean   @default(false)
 
   listId  Int
