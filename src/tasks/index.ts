@@ -1,8 +1,37 @@
 import express from "express";
 import { extendedPrisma } from "../lib/extendedPrisma";
 import { getDayWithoutTime } from "../lib/getDayWithoutTime";
-import { getTomorrowDate } from "../lib/getTomorrowDate";
+import { getDateWithOffset, getTomorrowDate } from "../lib/getTomorrowDate";
 import { isNullOrUndefined } from "../lib/isNullOrUndefined";
+
+const includeOnTask = {
+  list: true,
+  taskTag: {
+    include: {
+      tag: true,
+    },
+  },
+};
+
+const getTodaysTasks = async (userId: number, clientDate: string) => {
+  const lt = getDayWithoutTime(getTomorrowDate(clientDate));
+  const taskList = await extendedPrisma.task.findMany({
+    where: {
+      isCompleted: false,
+      dueDate: {
+        lt,
+      },
+      list: {
+        userId,
+      },
+    },
+    orderBy: {
+      timeViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+  return taskList;
+};
 
 const app = express();
 
@@ -60,14 +89,7 @@ app.get("/completed", async (req, res) => {
       orderBy: {
         timeViewOrder: "asc",
       },
-      include: {
-        list: true,
-        taskTag: {
-          include: {
-            tag: true,
-          },
-        },
-      },
+      include: includeOnTask,
     });
     res.status(200).json(taskList);
   } catch (error) {
@@ -79,31 +101,12 @@ app.get("/completed", async (req, res) => {
 });
 
 app.get("/today", async (req, res) => {
-  const lt = getDayWithoutTime(getTomorrowDate(req.query.today as string));
-
   try {
-    const taskList = await extendedPrisma.task.findMany({
-      where: {
-        isCompleted: false,
-        dueDate: {
-          lt: lt,
-        },
-        list: {
-          userId: req.userId,
-        },
-      },
-      orderBy: {
-        timeViewOrder: "asc",
-      },
-      include: {
-        list: true,
-        taskTag: {
-          include: {
-            tag: true,
-          },
-        },
-      },
-    });
+    if (!req.userId) {
+      throw new Error("userId is required");
+    }
+
+    const taskList = getTodaysTasks(req.userId, req.query.today as string);
     res.status(200).json(taskList);
   } catch (error) {
     console.error("Error occurred while retrieving today tasks", error);
@@ -131,14 +134,7 @@ app.get("/upcoming", async (req, res) => {
       orderBy: {
         timeViewOrder: "asc",
       },
-      include: {
-        list: true,
-        taskTag: {
-          include: {
-            tag: true,
-          },
-        },
-      },
+      include: includeOnTask,
     });
     res.status(200).json(taskList);
   } catch (error) {
@@ -147,6 +143,68 @@ app.get("/upcoming", async (req, res) => {
       .status(400)
       .json({ message: "Error occurred while retrieving upcoming tasks" });
   }
+});
+
+app.get("/standup", async (req, res) => {
+  // Get any tasks with a "blocked" tag
+  const tomorrowDate = getDayWithoutTime(
+    getTomorrowDate(req.query.today as string)
+  );
+  const todayDate = getDayWithoutTime(
+    getDateWithOffset(0, req.query.today as string)
+  );
+  const yeseterdayDate = getDayWithoutTime(
+    getDateWithOffset(-1, req.query.today as string)
+  );
+
+  if (!req.userId) {
+    return res.status(400).json({ message: "userId is required" });
+  }
+
+  const todayTaskList = await getTodaysTasks(req.userId, req.query.today as string);
+
+  const completedYeseterdayTaskList = await extendedPrisma.task.findMany({
+    where: {
+      isCompleted: true,
+      dateCompleted: {
+        gte: yeseterdayDate,
+        lt: todayDate,
+      },
+      list: {
+        userId: req.userId,
+      },
+    },
+    orderBy: {
+      timeViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+
+  const blockedTaskList = await extendedPrisma.task.findMany({
+    where: {
+      isCompleted: false,
+      taskTag: {
+        some: {
+          tag: {
+            tagName: "blocked",
+          },
+        },
+      },
+      list: {
+        userId: req.userId,
+      },
+    },
+    orderBy: {
+      timeViewOrder: "asc",
+    },
+    include: includeOnTask ,
+  });
+
+  res.status(200).json({
+    todayTaskList,
+    completedYeseterdayTaskList,
+    blockedTaskList,
+  });
 });
 
 app.delete("/completed", async (req, res) => {
