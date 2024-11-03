@@ -220,7 +220,8 @@ app.put("/reorder", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { listId, taskName, dueDate, isCompleted, tagIds } = req.body;
+  const { listId, taskName, dueDate, isCompleted, tagIds, dateCompleted } =
+    req.body;
 
   console.log("received tag ids", tagIds);
 
@@ -241,7 +242,7 @@ app.put("/:id", async (req, res) => {
         taskName,
         dueDate: dueDate ? new Date(dueDate) : dueDate,
         isCompleted,
-        dateCompleted: isCompleted ? getDayWithoutTime() : null,
+        dateCompleted: dateCompleted ? new Date(dateCompleted) : null,
       },
     });
 
