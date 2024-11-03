@@ -21,7 +21,10 @@ export const autoDeleteTasks = async ({ isDryRun }: Params) => {
     },
   });
 
+  console.log(`Found ${users.length} users with autoDeleteTasks set`);
+
   for (const user of users) {
+    console.log("processing user", user.email);
     if (user.autoDeleteTasks === AutoDeleteTasksOptions.NEVER) {
       console.error("Invalid autoDeleteTasks value", user.autoDeleteTasks);
       continue;
@@ -42,6 +45,10 @@ export const autoDeleteTasks = async ({ isDryRun }: Params) => {
       const tasks = await extendedPrisma.task.findMany({
         where: taskFilter,
       });
+
+      if (!tasks.length) {
+        console.log("No tasks eligible for deletion");
+      }
 
       for (const task of tasks) {
         console.log("Task eligible for deletion", task);
