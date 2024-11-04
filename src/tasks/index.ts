@@ -106,7 +106,10 @@ app.get("/today", async (req, res) => {
       throw new Error("userId is required");
     }
 
-    const taskList = getTodaysTasks(req.userId, req.query.today as string);
+    const taskList = await getTodaysTasks(
+      req.userId,
+      req.query.today as string
+    );
     res.status(200).json(taskList);
   } catch (error) {
     console.error("Error occurred while retrieving today tasks", error);
@@ -161,7 +164,10 @@ app.get("/standup", async (req, res) => {
     return res.status(400).json({ message: "userId is required" });
   }
 
-  const todayTaskList = await getTodaysTasks(req.userId, req.query.today as string);
+  const todayTaskList = await getTodaysTasks(
+    req.userId,
+    req.query.today as string
+  );
 
   const completedYeseterdayTaskList = await extendedPrisma.task.findMany({
     where: {
@@ -197,7 +203,7 @@ app.get("/standup", async (req, res) => {
     orderBy: {
       timeViewOrder: "asc",
     },
-    include: includeOnTask ,
+    include: includeOnTask,
   });
 
   res.status(200).json({
