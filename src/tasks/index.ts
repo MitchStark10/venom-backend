@@ -3,6 +3,7 @@ import { extendedPrisma } from "../lib/extendedPrisma";
 import { getDayWithoutTime } from "../lib/getDayWithoutTime";
 import { getDateWithOffset, getTomorrowDate } from "../lib/getTomorrowDate";
 import { isNullOrUndefined } from "../lib/isNullOrUndefined";
+import { getDefaultAutoSelectFamily } from "net";
 
 const includeOnTask = {
   list: true,
@@ -347,6 +348,63 @@ app.delete("/:id", async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: "task not found" });
   }
+});
+
+app.post("/standup", async (req, res) => {
+  const tasksCompletedYesterday = extendedPrisma.task.findMany({
+    where: {
+      list: {
+        userId: req.userId,
+        isStandupList: true,
+      },
+
+      isCompleted: true,
+      dateCompleted: {
+        lte: getDayWithoutTime(),
+      },
+    },
+    include: includeOnTask,
+  });
+
+  const tasksDueToday = extendedPrisma.task.findMany({
+    where: {
+      list: {
+        userId: req.userId,
+        isStandupList: true,
+      },
+
+      isCompleted: false,
+      dueDate: {
+        lte: getDayWithoutTime(getTomorrowDate()),
+      },
+    },
+    include: includeOnTask,
+  });
+
+  const blockedTasks = extendedPrisma.task.findMany({
+    where: {
+      isCompleted: false,
+      list: {
+        userId: req.userId,
+        isStandupList: true,
+      },
+
+      taskTag: {
+        some: {
+          tag: {
+            tagName: "blocked",
+          },
+        },
+      },
+    },
+    include: includeOnTask,
+  });
+
+  res.json({
+    yesterday: tasksCompletedYesterday,
+    today: tasksDueToday,
+    blocked: blockedTasks,
+  });
 });
 
 module.exports = app;
