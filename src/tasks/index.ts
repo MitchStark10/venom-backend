@@ -184,9 +184,10 @@ app.get("/standup", async (req, res) => {
 
   const completedYeseterdayTaskList = await extendedPrisma.task.findMany({
     where: {
+      isCompleted: true,
       dateCompleted: {
         gte: yeseterdayDate,
-        lt: todayDate,
+        lte: todayDate,
       },
       list: {
         userId: req.userId,
