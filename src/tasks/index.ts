@@ -169,7 +169,7 @@ app.get("/standup", async (req, res) => {
     where: {
       isCompleted: false,
       dueDate: {
-        lte: tomorrowDate,
+        lt: tomorrowDate,
       },
       list: {
         userId: req.userId,
