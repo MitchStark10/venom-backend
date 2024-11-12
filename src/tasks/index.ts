@@ -3,7 +3,6 @@ import { extendedPrisma } from "../lib/extendedPrisma";
 import { getDayWithoutTime } from "../lib/getDayWithoutTime";
 import { getDateWithOffset, getTomorrowDate } from "../lib/getTomorrowDate";
 import { isNullOrUndefined } from "../lib/isNullOrUndefined";
-import { getDefaultAutoSelectFamily } from "net";
 
 const includeOnTask = {
   list: true,
@@ -154,6 +153,7 @@ app.get("/standup", async (req, res) => {
   const tomorrowDate = getDayWithoutTime(
     getTomorrowDate(req.query.today as string)
   );
+
   const todayDate = getDayWithoutTime(
     getDateWithOffset(0, req.query.today as string)
   );
@@ -165,20 +165,31 @@ app.get("/standup", async (req, res) => {
     return res.status(400).json({ message: "userId is required" });
   }
 
-  const todayTaskList = await getTodaysTasks(
-    req.userId,
-    req.query.today as string
-  );
+  const todayTaskList = await extendedPrisma.task.findMany({
+    where: {
+      dueDate: {
+        lt: tomorrowDate,
+      },
+      list: {
+        userId: req.userId,
+        isStandupList: true,
+      },
+    },
+    orderBy: {
+      timeViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
 
   const completedYeseterdayTaskList = await extendedPrisma.task.findMany({
     where: {
-      isCompleted: true,
       dateCompleted: {
         gte: yeseterdayDate,
         lt: todayDate,
       },
       list: {
         userId: req.userId,
+        isStandupList: true,
       },
     },
     orderBy: {
@@ -199,6 +210,7 @@ app.get("/standup", async (req, res) => {
       },
       list: {
         userId: req.userId,
+        isStandupList: true,
       },
     },
     orderBy: {
@@ -208,9 +220,9 @@ app.get("/standup", async (req, res) => {
   });
 
   res.status(200).json({
-    todayTaskList,
-    completedYeseterdayTaskList,
-    blockedTaskList,
+    today: todayTaskList,
+    yesterday: completedYeseterdayTaskList,
+    blocked: blockedTaskList,
   });
 });
 
@@ -348,63 +360,6 @@ app.delete("/:id", async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: "task not found" });
   }
-});
-
-app.post("/standup", async (req, res) => {
-  const tasksCompletedYesterday = extendedPrisma.task.findMany({
-    where: {
-      list: {
-        userId: req.userId,
-        isStandupList: true,
-      },
-
-      isCompleted: true,
-      dateCompleted: {
-        lte: getDayWithoutTime(),
-      },
-    },
-    include: includeOnTask,
-  });
-
-  const tasksDueToday = extendedPrisma.task.findMany({
-    where: {
-      list: {
-        userId: req.userId,
-        isStandupList: true,
-      },
-
-      isCompleted: false,
-      dueDate: {
-        lte: getDayWithoutTime(getTomorrowDate()),
-      },
-    },
-    include: includeOnTask,
-  });
-
-  const blockedTasks = extendedPrisma.task.findMany({
-    where: {
-      isCompleted: false,
-      list: {
-        userId: req.userId,
-        isStandupList: true,
-      },
-
-      taskTag: {
-        some: {
-          tag: {
-            tagName: "blocked",
-          },
-        },
-      },
-    },
-    include: includeOnTask,
-  });
-
-  res.json({
-    yesterday: tasksCompletedYesterday,
-    today: tasksDueToday,
-    blocked: blockedTasks,
-  });
 });
 
 module.exports = app;
