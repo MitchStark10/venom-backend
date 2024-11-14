@@ -206,7 +206,10 @@ app.get("/standup", async (req, res) => {
       taskTag: {
         some: {
           tag: {
-            tagName: "blocked",
+            tagName: {
+              equals: "blocked",
+              mode: "insensitive",
+            },
           },
         },
       },
