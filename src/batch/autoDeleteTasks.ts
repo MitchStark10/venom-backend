@@ -45,21 +45,33 @@ export const autoDeleteTasks = async ({ isDryRun }: Params) => {
         isCompleted: true,
       };
 
-      if (isDryRun) {
-        const tasks = await extendedPrisma.task.findMany({
-          where: taskFilter,
-        });
+      const tasksToDelete = await extendedPrisma.task.findMany({
+        where: taskFilter,
+      });
 
-        if (!tasks.length) {
+      if (isDryRun) {
+        if (!tasksToDelete.length) {
           console.log("No tasks eligible for deletion");
         }
 
-        for (const task of tasks) {
+        for (const task of tasksToDelete) {
           console.log("Task eligible for deletion", task);
         }
       } else {
+        const deletedTaskTags = await extendedPrisma.taskTag.deleteMany({
+          where: {
+            taskId: {
+              in: tasksToDelete.map((task) => task.id),
+            },
+          },
+        });
+        console.log("Deleted task tags", deletedTaskTags);
         const deletedTasks = await extendedPrisma.task.deleteMany({
-          where: taskFilter,
+          where: {
+            id: {
+              in: tasksToDelete.map((task) => task.id),
+            },
+          },
         });
         console.log("Deletion operation completed", deletedTasks);
       }

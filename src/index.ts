@@ -44,7 +44,7 @@ app.listen(port, () => {
 });
 
 // Cron job once a day at 6am CST
-cron.schedule("0 6 * * *", async () => {
+cron.schedule("* * * * *", async () => {
   const isDryRun = process.env.ENABLE_DELETE_TASKS !== "true";
   await autoDeleteTasks({ isDryRun });
 });
