@@ -6,6 +6,7 @@ const app = express();
 const select = {
   id: true,
   autoDeleteTasks: true,
+  email: true,
 };
 
 const autoDeleteTasksValueToEnumMap: Record<any, AutoDeleteTasksOptions> = {
