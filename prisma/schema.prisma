@@ -39,7 +39,6 @@ model List {
 model Task {
   id            Int       @id @default(autoincrement())
   taskName      String
-  timeViewOrder Int       @default(0)
   listViewOrder Int       @default(0)
   dueDate       DateTime?
   dateCompleted DateTime?

@@ -26,7 +26,7 @@ const getTodaysTasks = async (userId: number, clientDate: string) => {
       },
     },
     orderBy: {
-      timeViewOrder: "asc",
+      listViewOrder: "asc",
     },
     include: includeOnTask,
   });
@@ -87,7 +87,7 @@ app.get("/completed", async (req, res) => {
         },
       },
       orderBy: {
-        timeViewOrder: "asc",
+        listViewOrder: "asc",
       },
       include: includeOnTask,
     });
@@ -135,7 +135,7 @@ app.get("/upcoming", async (req, res) => {
         },
       },
       orderBy: {
-        timeViewOrder: "asc",
+        listViewOrder: "asc",
       },
       include: includeOnTask,
     });
@@ -177,7 +177,7 @@ app.get("/standup", async (req, res) => {
       },
     },
     orderBy: {
-      timeViewOrder: "asc",
+      listViewOrder: "asc",
     },
     include: includeOnTask,
   });
@@ -195,7 +195,7 @@ app.get("/standup", async (req, res) => {
       },
     },
     orderBy: {
-      timeViewOrder: "asc",
+      listViewOrder: "asc",
     },
     include: includeOnTask,
   });
@@ -219,7 +219,7 @@ app.get("/standup", async (req, res) => {
       },
     },
     orderBy: {
-      timeViewOrder: "asc",
+      listViewOrder: "asc",
     },
     include: includeOnTask,
   });
@@ -271,7 +271,7 @@ app.put("/reorder", async (req, res) => {
       isNullOrUndefined(id) ||
       !fieldToUpdate ||
       isNullOrUndefined(newOrder) ||
-      !["timeViewOrder", "listViewOrder"].includes(fieldToUpdate)
+      !["listViewOrder"].includes(fieldToUpdate)
     ) {
       return res
         .status(400)
