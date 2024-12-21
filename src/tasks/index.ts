@@ -327,7 +327,7 @@ app.put("/reorder/v2", async (req, res) => {
         listViewOrder: {
           gte: newOrder,
         },
-        dueDate: dueDateToCheck,
+        dueDate: dueDateToCheck ? getDayWithoutTime(dueDateToCheck) : null,
       },
     });
 
