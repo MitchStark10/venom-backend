@@ -300,6 +300,68 @@ app.put("/reorder", async (req, res) => {
   res.status(200).json({ success: true });
 });
 
+app.put("/reorder/v2", async (req, res) => {
+  const { id, newOrder, newDueDate } = req.body;
+
+  if (isNullOrUndefined(id) || isNullOrUndefined(newOrder)) {
+    return res.status(400).json({ message: "id and newOrder are required" });
+  }
+
+  try {
+    const existingTask = await extendedPrisma.task.findFirst({
+      where: {
+        id,
+        list: {
+          userId: req.userId,
+        },
+      },
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const dueDateToCheck = newDueDate || existingTask.dueDate;
+    const impactedTasks = await extendedPrisma.task.findMany({
+      where: {
+        listViewOrder: {
+          gte: newOrder,
+        },
+        dueDate: dueDateToCheck,
+      },
+    });
+
+    await extendedPrisma.task.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        listViewOrder: newOrder,
+        dueDate: newDueDate ? new Date(newDueDate) : null,
+      },
+    });
+
+    for (const task of impactedTasks) {
+      await extendedPrisma.task.update({
+        where: {
+          id: task.id,
+        },
+        data: {
+          listViewOrder: task.listViewOrder + 1,
+        },
+      });
+    }
+  } catch (error) {
+    console.error("Error occurred updating task order", error);
+    return res.status(500).json({
+      message: "Unexpected error occurred updating the order",
+      error,
+    });
+  }
+
+  res.status(200).json({ success: true });
+});
+
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { listId, taskName, dueDate, isCompleted, tagIds, dateCompleted } =
