@@ -321,13 +321,16 @@ app.put("/reorder/v2", async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    const dueDateToCheck = newDueDate || existingTask.dueDate;
+    const dueDateToCheck = newDueDate
+      ? getDayWithoutTime(newDueDate)
+      : existingTask.dueDate;
+
     const impactedTasks = await extendedPrisma.task.findMany({
       where: {
         listViewOrder: {
           gte: newOrder,
         },
-        dueDate: dueDateToCheck ? getDayWithoutTime(dueDateToCheck) : null,
+        dueDate: dueDateToCheck ? new Date(dueDateToCheck) : null,
       },
     });
 
