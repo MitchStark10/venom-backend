@@ -327,6 +327,9 @@ app.put("/reorder/v2", async (req, res) => {
 
     const impactedTasks = await extendedPrisma.task.findMany({
       where: {
+        id: {
+          not: Number(id),
+        },
         listViewOrder: {
           gte: newOrder,
         },
