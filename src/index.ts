@@ -31,6 +31,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 app.use("/users", require("./users/publicUsers"));
+app.use("/feedback", require("./feedback"));
 
 app.use(authMiddleware);
 
