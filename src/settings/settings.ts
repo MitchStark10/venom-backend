@@ -94,4 +94,46 @@ app.put("/", async (req, res) => {
   res.status(200).json(normalizeUser(user));
 });
 
+app.delete("/full-account", async (req, res) => {
+  await extendedPrisma.$transaction(async (extendedPrisma) => {
+    await extendedPrisma.taskTag.deleteMany({
+      where: {
+        task: {
+          list: {
+            userId: req.userId,
+          },
+        },
+      },
+    });
+
+    await extendedPrisma.tag.deleteMany({
+      where: {
+        userId: req.userId,
+      },
+    });
+
+    await extendedPrisma.task.deleteMany({
+      where: {
+        list: {
+          userId: req.userId,
+        },
+      },
+    });
+
+    await extendedPrisma.list.deleteMany({
+      where: {
+        userId: req.userId,
+      },
+    });
+
+    await extendedPrisma.user.delete({
+      where: {
+        id: req.userId,
+      },
+    });
+  });
+
+  res.status(204).end();
+});
+
 module.exports = app;
