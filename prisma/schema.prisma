@@ -22,7 +22,7 @@ model User {
   email                     String                 @unique
   hashedPass                String
   autoDeleteTasks           AutoDeleteTasksOptions @default(NEVER)
-  dailyReportIgnoreWeekends Boolean                @default(false)
+  dailyReportIgnoreWeekends Boolean                @default(true)
 
   lists List[] @relation("userLists")
   Tag   Tag[]
