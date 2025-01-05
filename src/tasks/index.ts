@@ -149,7 +149,18 @@ app.get("/upcoming", async (req, res) => {
 });
 
 app.get("/standup", async (req, res) => {
-  // Get any tasks with a "blocked" tag
+  if (!req.userId) {
+    return res.status(400).json({ message: "userId is required" });
+  }
+
+  const user = await extendedPrisma.user.findUnique({
+    where: {
+      id: req.userId,
+    },
+  });
+
+  const isTodayMonday = new Date(req.query.today as string).getDay() === 1;
+
   const tomorrowDate = getDayWithoutTime(
     getTomorrowDate(req.query.today as string)
   );
@@ -157,13 +168,13 @@ app.get("/standup", async (req, res) => {
   const todayDate = getDayWithoutTime(
     getDateWithOffset(0, req.query.today as string)
   );
-  const yeseterdayDate = getDayWithoutTime(
-    getDateWithOffset(-1, req.query.today as string)
-  );
 
-  if (!req.userId) {
-    return res.status(400).json({ message: "userId is required" });
-  }
+  // If the user has opted to ignore weekends, we need to check if today is Monday.
+  // If it is, we need to get the tasks from Friday, otherwise we get the tasks from yesterday
+  const yeseterdayDate =
+    user?.dailyReportIgnoreWeekends && isTodayMonday
+      ? getDayWithoutTime(getDateWithOffset(-3, req.query.today as string))
+      : getDayWithoutTime(getDateWithOffset(-1, req.query.today as string));
 
   const todayTaskList = await extendedPrisma.task.findMany({
     where: {

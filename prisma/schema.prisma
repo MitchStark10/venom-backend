@@ -18,12 +18,14 @@ enum AutoDeleteTasksOptions {
 }
 
 model User {
-  id              Int                    @id @default(autoincrement())
-  email           String                 @unique
-  hashedPass      String
-  autoDeleteTasks AutoDeleteTasksOptions @default(NEVER)
-  lists           List[]                 @relation("userLists")
-  Tag             Tag[]
+  id                        Int                    @id @default(autoincrement())
+  email                     String                 @unique
+  hashedPass                String
+  autoDeleteTasks           AutoDeleteTasksOptions @default(NEVER)
+  dailyReportIgnoreWeekends Boolean                @default(false)
+
+  lists List[] @relation("userLists")
+  Tag   Tag[]
 }
 
 model List {
