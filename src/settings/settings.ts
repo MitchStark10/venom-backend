@@ -7,6 +7,7 @@ const select = {
   id: true,
   autoDeleteTasks: true,
   email: true,
+  dailyReportIgnoreWeekends: true,
 };
 
 const autoDeleteTasksValueToEnumMap: Record<any, AutoDeleteTasksOptions> = {
@@ -44,7 +45,8 @@ app.get("/", async (req, res) => {
 });
 
 app.put("/", async (req, res) => {
-  const { autoDeleteTasks, standupListIds } = req.body;
+  const { autoDeleteTasks, standupListIds, dailyReportIgnoreWeekends } =
+    req.body;
 
   const autoDeleteTasksEnumValue =
     autoDeleteTasksValueToEnumMap[autoDeleteTasks];
@@ -61,6 +63,7 @@ app.put("/", async (req, res) => {
     },
     data: {
       autoDeleteTasks: autoDeleteTasksEnumValue,
+      dailyReportIgnoreWeekends,
     },
     select,
   });
