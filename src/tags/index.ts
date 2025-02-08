@@ -54,6 +54,9 @@ app.get("/", async (req, res) => {
     where: {
       userId: req.userId,
     },
+    orderBy: {
+      order: "asc",
+    },
   });
 
   res.status(200).json(tags);
