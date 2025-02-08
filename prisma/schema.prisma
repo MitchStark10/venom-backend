@@ -55,6 +55,7 @@ model Tag {
   id       Int    @id @default(autoincrement())
   tagName  String
   tagColor String
+  order    Int    @default(0)
 
   userId  Int
   user    User      @relation(fields: [userId], references: [id])
