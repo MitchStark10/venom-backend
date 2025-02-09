@@ -25,6 +25,33 @@ app.delete("/:id", async (req, res) => {
   });
 });
 
+app.put("/reorder", async (req, res) => {
+  const { tags } = req.body;
+
+  try {
+    const updatedTags = await Promise.all(
+      tags.map(async (tag: any, index: number) => {
+        const updatedTag = await extendedPrisma.tag.update({
+          where: {
+            id: tag.id,
+            userId: req.userId,
+          },
+          data: {
+            tagName: undefined,
+            tagColor: undefined,
+            order: index,
+          },
+        });
+        return updatedTag;
+      })
+    );
+    res.json(updatedTags);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: "list not found" });
+  }
+});
+
 app.put("/:id", async (req, res) => {
   const idToUpdate = Number(req.params.id);
   const { tagColor, tagName } = req.body;
@@ -84,32 +111,6 @@ app.post("/", async (req, res) => {
   });
 
   res.status(200).json(tag);
-});
-
-app.put("/reorder", async (req, res) => {
-  const { tags } = req.body;
-
-  try {
-    const updatedTags = await Promise.all(
-      tags.map(async (tag: any, index: number) => {
-        const updatedTag = await extendedPrisma.tag.update({
-          where: {
-            id: tag.id,
-            userId: req.userId,
-          },
-          data: {
-            tagName: undefined,
-            tagColor: undefined,
-            order: index,
-          },
-        });
-        return updatedTag;
-      })
-    );
-    res.json(updatedTags);
-  } catch (error) {
-    res.status(400).json({ message: "list not found" });
-  }
 });
 
 module.exports = app;
