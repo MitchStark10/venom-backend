@@ -48,7 +48,9 @@ app.put("/reorder", async (req, res) => {
     res.json(updatedTags);
   } catch (error) {
     console.error(error);
-    res.status(400).json({ message: "list not found" });
+    res
+      .status(400)
+      .json({ message: "An error occurred when reordering tags." });
   }
 });
 
