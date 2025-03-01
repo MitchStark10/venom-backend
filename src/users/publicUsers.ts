@@ -2,6 +2,9 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import { extendedPrisma } from "../lib/extendedPrisma";
 import { send365Email } from "../lib/send365Email";
+import crypto from "crypto";
+
+const PASSWORD_RESET_EXPIRES = 3_600_000; // 1 hour
 
 const app = express();
 
@@ -87,17 +90,91 @@ app.post("/request_password_reset", async (req, res) => {
     return res.status(400).json({ error: "User not found." });
   }
 
+  // Generate a random token
+  const token = crypto.randomBytes(32).toString("hex");
+
+  // Calculate the expiry timestamp
+  const expiry = new Date(Date.now() + PASSWORD_RESET_EXPIRES);
+
+  // Create a hash of the token and userId for secure storage.
+  const hash = crypto
+    .createHmac("sha256", JWT_SECRET)
+    .update(token + user.id.toString())
+    .digest("hex");
+
+  extendedPrisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      resetPasswordToken: hash,
+      resetPasswordTokenExpiry: expiry,
+    },
+  });
+
   try {
     await send365Email({
       to: user.email,
       subject: "Password Reset",
-      html: `You are receiving this email because you have requested the reset of the password for your account.<br>Please click on the following link, or paste this into your browser to complete the process:<br><a href="${FRONTEND_DOMAIN}/${user.id}">Reset Password</a><br>If you did not request this, please ignore this email and your password will remain unchanged.`,
+      html: `You are receiving this email because you have requested the reset of the password for your account.<br><br>Please click on the following link, or paste this into your browser to complete the process:<br><br><a href="${FRONTEND_DOMAIN}/reset_password?token=${token}&userId=${user.id}">Reset Password</a><br><br>If you did not request this, please ignore this email and your password will remain unchanged.`,
     });
   } catch (error) {
     return res.status(500).json({ error: "Error sending email" });
   }
 
   res.json({ message: "Email sent" });
+});
+
+app.post("/reset_password", async (req, res) => {
+  const { token, password, userId } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ error: "Token and password are required" });
+  }
+
+  const user = await extendedPrisma.user.findFirst({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    return res.status(400).json({ error: "Invalid or expired token" });
+  }
+
+  try {
+    const calculatedHash = crypto
+      .createHmac("sha256", JWT_SECRET)
+      .update(token + userId.toString())
+      .digest("hex");
+
+    if (
+      calculatedHash !== user.resetPasswordToken ||
+      !user.resetPasswordTokenExpiry ||
+      user.resetPasswordTokenExpiry < new Date()
+    ) {
+      throw new Error("Invalid token");
+    }
+  } catch (error) {
+    console.error("Token validation error:", error);
+    return res.status(400).json({ error: "Invalid or expired token" });
+  }
+
+  const bcrypt = require("bcrypt");
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPass = bcrypt.hashSync(password, salt);
+
+  await extendedPrisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      hashedPass,
+      resetPasswordToken: null,
+      resetPasswordTokenExpiry: null,
+    },
+  });
+
+  res.json({ message: "Password reset" });
 });
 
 module.exports = app;

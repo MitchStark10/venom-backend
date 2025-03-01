@@ -23,6 +23,8 @@ model User {
   hashedPass                String
   autoDeleteTasks           AutoDeleteTasksOptions @default(NEVER)
   dailyReportIgnoreWeekends Boolean                @default(true)
+  resetPasswordToken        String?
+  resetPasswordTokenExpiry  DateTime?
 
   lists List[] @relation("userLists")
   Tag   Tag[]
