@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { extendedPrisma } from "../lib/extendedPrisma";
 import { send365Email } from "../lib/send365Email";
 import crypto from "crypto";
+import { User } from "@prisma/client";
 
 const PASSWORD_RESET_EXPIRES = 3_600_000; // 1 hour
 
@@ -18,6 +19,11 @@ if (!process.env.JWT_SECRET) {
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const FRONTEND_DOMAIN = process.env.FRONTEND_DOMAIN;
+
+const userForToken = (user: User) => {
+  const { hashedPass, ...userForToken } = user;
+  return userForToken;
+};
 
 app.post("/createUser", async (req, res) => {
   const { email, password } = req.body;
@@ -37,7 +43,7 @@ app.post("/createUser", async (req, res) => {
       },
     });
 
-    const token = jwt.sign(newUser, JWT_SECRET);
+    const token = jwt.sign(userForToken(newUser), JWT_SECRET);
     res.json({ token });
   } catch (error: any) {
     console.log("Caught error during new user creation", error);
@@ -70,7 +76,7 @@ app.post("/login", async (req, res) => {
     return res.status(400).json({ error: "User or password is incorrect." });
   }
 
-  const token = jwt.sign(user, JWT_SECRET);
+  const token = jwt.sign(userForToken(user), JWT_SECRET);
   res.json({ token });
 });
 
@@ -163,7 +169,7 @@ app.post("/reset_password", async (req, res) => {
   const salt = bcrypt.genSaltSync(10);
   const hashedPass = bcrypt.hashSync(password, salt);
 
-  await extendedPrisma.user.update({
+  const updatedUser = await extendedPrisma.user.update({
     where: {
       id: user.id,
     },
@@ -174,7 +180,8 @@ app.post("/reset_password", async (req, res) => {
     },
   });
 
-  res.json({ message: "Password reset" });
+  const uiToken = jwt.sign(userForToken(updatedUser), JWT_SECRET);
+  res.json({ token: uiToken });
 });
 
 module.exports = app;
