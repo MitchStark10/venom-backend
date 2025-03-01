@@ -127,7 +127,7 @@ app.post("/request_password_reset", async (req, res) => {
 
 app.post("/reset_password", async (req, res) => {
   const { token, password, userId } = req.body;
-  if (!token || !password) {
+  if (!token || !password || !userId) {
     return res.status(400).json({ error: "Token and password are required" });
   }
 
