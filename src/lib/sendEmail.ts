@@ -18,7 +18,7 @@ const transportOptions = {
   },
 };
 
-export const send365Email = async ({ to, subject, html }: Mail.Options) => {
+export const sendEmail = async ({ to, subject, html }: Mail.Options) => {
   try {
     const mailTransport = nodemailer.createTransport(transportOptions);
 

@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import { extendedPrisma } from "../lib/extendedPrisma";
-import { send365Email } from "../lib/send365Email";
+import { sendEmail } from "../lib/sendEmail";
 import crypto from "crypto";
 import { User } from "@prisma/client";
 
@@ -119,10 +119,10 @@ app.post("/request_password_reset", async (req, res) => {
   });
 
   try {
-    await send365Email({
+    await sendEmail({
       to: user.email,
       subject: "Password Reset",
-      html: `You are receiving this email because you have requested the reset of the password for your account.<br><br>Please click on the following link, or paste this into your browser to complete the process:<br><br><a href="${FRONTEND_DOMAIN}/reset_password?token=${token}&userId=${user.id}">Reset Password</a><br><br>If you did not request this, please ignore this email and your password will remain unchanged.`,
+      html: `You are receiving this email because you have requested the reset of the password for your account.<br><br>Please click on the following link, or paste this into your browser to complete the process:<br><br><a href="${FRONTEND_DOMAIN}/reset-password?token=${token}&userId=${user.id}">Reset Password</a><br><br>If you did not request this, please ignore this email and your password will remain unchanged.`,
     });
   } catch (error) {
     return res.status(500).json({ error: "Error sending email" });
