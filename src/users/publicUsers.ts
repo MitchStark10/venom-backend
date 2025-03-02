@@ -108,7 +108,7 @@ app.post("/request_password_reset", async (req, res) => {
     .update(token + user.id.toString())
     .digest("hex");
 
-  extendedPrisma.user.update({
+  await extendedPrisma.user.update({
     where: {
       id: user.id,
     },
@@ -144,6 +144,7 @@ app.post("/reset_password", async (req, res) => {
   });
 
   if (!user) {
+    console.error("User not found during reset password request");
     return res.status(400).json({ error: "Invalid or expired token" });
   }
 
@@ -158,6 +159,12 @@ app.post("/reset_password", async (req, res) => {
       !user.resetPasswordTokenExpiry ||
       user.resetPasswordTokenExpiry < new Date()
     ) {
+      console.error("Invalid token or expired token received", {
+        incorrectHash: calculatedHash !== user.resetPasswordToken,
+        expired:
+          !user.resetPasswordTokenExpiry ||
+          user.resetPasswordTokenExpiry < new Date(),
+      });
       throw new Error("Invalid token");
     }
   } catch (error) {
