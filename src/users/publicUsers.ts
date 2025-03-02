@@ -162,7 +162,7 @@ app.post("/reset_password", async (req, res) => {
     }
   } catch (error) {
     console.error("Token validation error:", error);
-    return res.status(400).json({ error: "Invalid or expired token" });
+    return res.status(400).json({ message: "Invalid or expired token" });
   }
 
   const bcrypt = require("bcrypt");
