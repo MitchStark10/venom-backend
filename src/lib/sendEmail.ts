@@ -1,20 +1,27 @@
 import nodemailer from "nodemailer";
 import Mail from "nodemailer/lib/mailer";
 
-if (!process.env.EMAIL_PASSWORD || !process.env.EMAIL_ACCOUNT) {
-  console.error("EMAIL_ACCOUNT or EMAIL_PASSWORD environment variable not set");
+if (
+  !process.env.SMTP_PASSWORD ||
+  !process.env.SMTP_ACCOUNT ||
+  !process.env.EMAIL_FROM
+) {
+  console.error(
+    "SMTP_ACCOUNT, SMTP_PASSWORD, or EMAIL_FROM environment variable not set"
+  );
   process.exit(1);
 }
 
-const EMAIL_ACCOUNT = process.env.EMAIL_ACCOUNT;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+const SMTP_ACCOUNT = process.env.SMTP_ACCOUNT;
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
+const EMAIL_FROM = process.env.EMAIL_FROM;
 
 const transportOptions = {
   host: "mail.smtp2go.com",
   port: 2525,
   auth: {
-    user: EMAIL_ACCOUNT,
-    pass: EMAIL_PASSWORD,
+    user: SMTP_ACCOUNT,
+    pass: SMTP_PASSWORD,
   },
 };
 
@@ -23,9 +30,9 @@ export const sendEmail = async ({ to, subject, html }: Mail.Options) => {
     const mailTransport = nodemailer.createTransport(transportOptions);
 
     await mailTransport.sendMail({
-      from: EMAIL_ACCOUNT,
+      from: EMAIL_FROM,
       to,
-      replyTo: EMAIL_ACCOUNT,
+      replyTo: SMTP_ACCOUNT,
       subject,
       html,
     });
