@@ -276,14 +276,9 @@ app.put("/reorder", async (req, res) => {
   const { tasksToUpdate } = req.body;
 
   for (const task of tasksToUpdate) {
-    const { id, fieldToUpdate, newOrder, newDueDate } = task;
+    const { id, newOrder, newDueDate } = task;
 
-    if (
-      isNullOrUndefined(id) ||
-      !fieldToUpdate ||
-      isNullOrUndefined(newOrder) ||
-      !["listViewOrder"].includes(fieldToUpdate)
-    ) {
+    if (isNullOrUndefined(id) || isNullOrUndefined(newOrder)) {
       return res
         .status(400)
         .json({ message: "id, fieldToUpdate, and newOrder are required" });
@@ -295,7 +290,7 @@ app.put("/reorder", async (req, res) => {
           id: Number(id),
         },
         data: {
-          [fieldToUpdate]: newOrder,
+          listViewOrder: newOrder,
           dueDate: newDueDate ? new Date(newDueDate) : null,
         },
       });
