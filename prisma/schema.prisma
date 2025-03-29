@@ -45,6 +45,7 @@ model Task {
   id            Int       @id @default(autoincrement())
   taskName      String
   listViewOrder Int       @default(0)
+  combinedViewOrder Int       @default(0)
   dueDate       DateTime?
   dateCompleted DateTime?
   isCompleted   Boolean   @default(false)
