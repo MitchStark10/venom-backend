@@ -61,7 +61,8 @@ app.post("/", async (req, res) => {
       taskName,
       listId,
       dueDate: dueDate ? new Date(dueDate) : null,
-      listViewOrder: associatedList.tasks.length,
+      listViewOrder: -1,
+      combinedViewOrder: -1,
     },
   });
 
@@ -87,7 +88,7 @@ app.get("/completed", async (req, res) => {
         },
       },
       orderBy: {
-        listViewOrder: "asc",
+        combinedViewOrder: "asc",
       },
       include: includeOnTask,
     });
@@ -135,7 +136,7 @@ app.get("/upcoming", async (req, res) => {
         },
       },
       orderBy: {
-        listViewOrder: "asc",
+        combinedViewOrder: "asc",
       },
       include: includeOnTask,
     });
@@ -188,7 +189,7 @@ app.get("/standup", async (req, res) => {
       },
     },
     orderBy: {
-      listViewOrder: "asc",
+      combinedViewOrder: "asc",
     },
     include: includeOnTask,
   });
@@ -206,7 +207,7 @@ app.get("/standup", async (req, res) => {
       },
     },
     orderBy: {
-      listViewOrder: "asc",
+      combinedViewOrder: "asc",
     },
     include: includeOnTask,
   });
@@ -230,7 +231,7 @@ app.get("/standup", async (req, res) => {
       },
     },
     orderBy: {
-      listViewOrder: "asc",
+      combinedViewOrder: "asc",
     },
     include: includeOnTask,
   });
@@ -276,7 +277,7 @@ app.put("/reorder", async (req, res) => {
   const { tasksToUpdate } = req.body;
 
   for (const task of tasksToUpdate) {
-    const { id, newOrder, newDueDate } = task;
+    const { id, newOrder, newDueDate, fieldToUpdate = "listViewOrder" } = task;
 
     if (isNullOrUndefined(id) || isNullOrUndefined(newOrder)) {
       return res
@@ -290,7 +291,7 @@ app.put("/reorder", async (req, res) => {
           id: Number(id),
         },
         data: {
-          listViewOrder: newOrder,
+          [fieldToUpdate]: newOrder,
           dueDate: newDueDate ? new Date(newDueDate) : null,
         },
       });
@@ -301,74 +302,6 @@ app.put("/reorder", async (req, res) => {
         error,
       });
     }
-  }
-
-  res.status(200).json({ success: true });
-});
-
-app.put("/reorder/v2", async (req, res) => {
-  const { id, newOrder, newDueDate } = req.body;
-
-  if (isNullOrUndefined(id) || isNullOrUndefined(newOrder)) {
-    return res.status(400).json({ message: "id and newOrder are required" });
-  }
-
-  try {
-    const existingTask = await extendedPrisma.task.findFirst({
-      where: {
-        id,
-        list: {
-          userId: req.userId,
-        },
-      },
-    });
-
-    if (!existingTask) {
-      return res.status(404).json({ message: "Task not found" });
-    }
-
-    const dueDateToCheck = newDueDate
-      ? getDayWithoutTime(newDueDate)
-      : existingTask.dueDate;
-
-    const impactedTasks = await extendedPrisma.task.findMany({
-      where: {
-        id: {
-          not: Number(id),
-        },
-        listViewOrder: {
-          gte: newOrder,
-        },
-        dueDate: dueDateToCheck ? new Date(dueDateToCheck) : null,
-      },
-    });
-
-    await extendedPrisma.task.update({
-      where: {
-        id: Number(id),
-      },
-      data: {
-        listViewOrder: newOrder,
-        dueDate: newDueDate ? new Date(newDueDate) : null,
-      },
-    });
-
-    for (const task of impactedTasks) {
-      await extendedPrisma.task.update({
-        where: {
-          id: task.id,
-        },
-        data: {
-          listViewOrder: task.listViewOrder + 1,
-        },
-      });
-    }
-  } catch (error) {
-    console.error("Error occurred updating task order", error);
-    return res.status(500).json({
-      message: "Unexpected error occurred updating the order",
-      error,
-    });
   }
 
   res.status(200).json({ success: true });
