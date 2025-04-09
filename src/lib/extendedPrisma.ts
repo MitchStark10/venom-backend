@@ -1,6 +1,6 @@
 import { PrismaClient, Task, TaskTag } from "@prisma/client";
 
-interface ExtendedTaskWithTags extends Task {
+export interface ExtendedTaskWithTags extends Task {
   taskTag?: TaskTag[];
 }
 

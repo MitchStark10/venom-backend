@@ -1,4 +1,5 @@
 import express from "express";
+import { addOverdueTagToTasks } from "../lib/addOverdueTagToTasks";
 import { extendedPrisma } from "../lib/extendedPrisma";
 import { getDayWithoutTime } from "../lib/getDayWithoutTime";
 import { getDateWithOffset, getTomorrowDate } from "../lib/getTomorrowDate";
@@ -30,7 +31,10 @@ const getTodaysTasks = async (userId: number, clientDate: string) => {
     },
     include: includeOnTask,
   });
-  return taskList;
+
+  const taskListWithOverdueTags = addOverdueTagToTasks(taskList, clientDate);
+
+  return taskListWithOverdueTags;
 };
 
 const app = express();
@@ -109,7 +113,7 @@ app.get("/today", async (req, res) => {
 
     const taskList = await getTodaysTasks(
       req.userId,
-      req.query.today as string
+      req.query.today as string,
     );
     res.status(200).json(taskList);
   } catch (error) {
@@ -122,7 +126,7 @@ app.get("/today", async (req, res) => {
 
 app.get("/upcoming", async (req, res) => {
   const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string)
+    getTomorrowDate(req.query.today as string),
   );
   try {
     const taskList = await extendedPrisma.task.findMany({
@@ -163,11 +167,11 @@ app.get("/standup", async (req, res) => {
   const isTodayMonday = new Date(req.query.today as string).getDay() === 1;
 
   const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string)
+    getTomorrowDate(req.query.today as string),
   );
 
   const todayDate = getDayWithoutTime(
-    getDateWithOffset(0, req.query.today as string)
+    getDateWithOffset(0, req.query.today as string),
   );
 
   // If the user has opted to ignore weekends, we need to check if today is Monday.
@@ -237,7 +241,7 @@ app.get("/standup", async (req, res) => {
   });
 
   res.status(200).json({
-    today: todayTaskList,
+    today: addOverdueTagToTasks(todayTaskList, todayDate),
     yesterday: completedYeseterdayTaskList,
     blocked: blockedTaskList,
   });
