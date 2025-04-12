@@ -1,9 +1,11 @@
 import express from "express";
 import { extendedPrisma } from "../lib/extendedPrisma";
+import {addOverdueTagToTasks} from "../lib/addOverdueTagToTasks";
 
 const app = express();
 
 app.get("/", async (req, res) => {
+  const clientDate = req.query.today as string;
   const lists = await extendedPrisma.list.findMany({
     where: {
       userId: req.userId,
@@ -34,7 +36,12 @@ app.get("/", async (req, res) => {
       },
     },
   });
-  res.json(lists);
+
+  const listsWithOverdueTags = lists.map(list => ({
+    ...list,
+    tasks: addOverdueTagToTasks(list.tasks, clientDate)
+  }));
+  res.json(listsWithOverdueTags);
 });
 
 app.put("/reorder", async (req, res) => {

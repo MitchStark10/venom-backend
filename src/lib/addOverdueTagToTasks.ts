@@ -14,6 +14,10 @@ export const addOverdueTagToTasks = (
   tasks: ExtendedTask[],
   clientDate: string | Date,
 ) => {
+  if (!clientDate) {
+    return tasks;
+  }
+  
   return tasks.map((task) => {
     if (task.dueDate && new Date(task.dueDate) < new Date(clientDate)) {
       return {
