@@ -113,7 +113,7 @@ app.get("/today", async (req, res) => {
 
     const taskList = await getTodaysTasks(
       req.userId,
-      req.query.today as string,
+      req.query.today as string
     );
     res.status(200).json(taskList);
   } catch (error) {
@@ -126,7 +126,7 @@ app.get("/today", async (req, res) => {
 
 app.get("/upcoming", async (req, res) => {
   const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string),
+    getTomorrowDate(req.query.today as string)
   );
   try {
     const taskList = await extendedPrisma.task.findMany({
@@ -167,11 +167,11 @@ app.get("/standup", async (req, res) => {
   const isTodayMonday = new Date(req.query.today as string).getDay() === 1;
 
   const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string),
+    getTomorrowDate(req.query.today as string)
   );
 
   const todayDate = getDayWithoutTime(
-    getDateWithOffset(0, req.query.today as string),
+    getDateWithOffset(0, req.query.today as string)
   );
 
   // If the user has opted to ignore weekends, we need to check if today is Monday.
@@ -316,7 +316,9 @@ app.put("/:id", async (req, res) => {
   const { listId, taskName, dueDate, isCompleted, tagIds, dateCompleted } =
     req.body;
 
-  console.log("received tag ids", tagIds);
+  const filteredTagIds = tagIds?.filter((tagId: number) => tagId >= 0);
+
+  console.log("received tag ids", filteredTagIds);
 
   if (!taskName && !dueDate) {
     return res.status(400).json({ message: "taskName or dueDate is required" });
@@ -345,9 +347,9 @@ app.put("/:id", async (req, res) => {
       },
     });
 
-    if (tagIds?.length > 0) {
+    if (filteredTagIds?.length > 0) {
       await extendedPrisma.taskTag.createMany({
-        data: tagIds.map((tagId: number) => ({
+        data: filteredTagIds.map((tagId: number) => ({
           taskId: task.id,
           tagId,
         })),
