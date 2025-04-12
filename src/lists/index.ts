@@ -1,6 +1,6 @@
 import express from "express";
 import { extendedPrisma } from "../lib/extendedPrisma";
-import {addOverdueTagToTasks} from "../lib/addOverdueTagToTasks";
+import { addOverdueTagToTasks } from "../lib/addOverdueTagToTasks";
 
 const app = express();
 
@@ -37,9 +37,9 @@ app.get("/", async (req, res) => {
     },
   });
 
-  const listsWithOverdueTags = lists.map(list => ({
+  const listsWithOverdueTags = lists.map((list) => ({
     ...list,
-    tasks: addOverdueTagToTasks(list.tasks, clientDate)
+    tasks: addOverdueTagToTasks(list.tasks, clientDate),
   }));
   res.json(listsWithOverdueTags);
 });
