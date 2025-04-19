@@ -26,6 +26,12 @@ const transportOptions = {
 };
 
 export const sendEmail = async ({ to, subject, html }: Mail.Options) => {
+
+  if (!to) {
+    console.warn("Unable to send email with a missing 'to' value");
+    return;
+  }
+
   try {
     const mailTransport = nodemailer.createTransport(transportOptions);
 
