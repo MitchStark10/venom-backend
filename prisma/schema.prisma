@@ -58,9 +58,9 @@ model Task {
   isCompleted       Boolean   @default(false)
 
   listId            Int
-  list              List                @relation(fields: [listId], references: [id])
+  list              List               @relation(fields: [listId], references: [id])
   taskTag           TaskTag[]
-  RecurringSchedule RecurringSchedule[]
+  recurringSchedule RecurringSchedule?
 }
 
 // Example schedules:
@@ -70,10 +70,10 @@ model Task {
 // Cadence: Yearly, Pivots: [212] (yearly on the 212nd day of the year)
 model RecurringSchedule {
   id      Int                      @id @default(autoincrement())
-  task    Task                     @relation(fields: [taskId], references: [id])
+  task    Task                     @relation(fields: [taskId], references: [id]) // TODO: Define how to handle task deletion at the database level
   cadence RecurringScheduleCadence
   pivots  Int[]
-  taskId  Int
+  taskId  Int                      @unique
 }
 
 model Tag {

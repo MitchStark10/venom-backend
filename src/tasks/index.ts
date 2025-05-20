@@ -4,6 +4,8 @@ import { extendedPrisma } from "../lib/extendedPrisma";
 import { getDayWithoutTime } from "../lib/getDayWithoutTime";
 import { getDateWithOffset, getTomorrowDate } from "../lib/getTomorrowDate";
 import { isNullOrUndefined } from "../lib/isNullOrUndefined";
+import { validateRecurringScheduleJson } from "../lib/validators/validateRecurringScheduleJson";
+import {Prisma} from "@prisma/client";
 
 const includeOnTask = {
   list: true,
@@ -12,6 +14,7 @@ const includeOnTask = {
       tag: true,
     },
   },
+  recurringSchedule: true,
 };
 
 const getTodaysTasks = async (userId: number, clientDate: string) => {
@@ -40,7 +43,7 @@ const getTodaysTasks = async (userId: number, clientDate: string) => {
 const app = express();
 
 app.post("/", async (req, res) => {
-  const { taskName, listId, dueDate, tagIds } = req.body;
+  const { taskName, listId, dueDate, tagIds, recurringSchedule } = req.body;
 
   if (!taskName || !listId) {
     return res.status(400).json({ message: "taskName or listid is required" });
@@ -79,6 +82,16 @@ app.post("/", async (req, res) => {
     });
   }
 
+  if (validateRecurringScheduleJson(recurringSchedule)) {
+    await extendedPrisma.recurringSchedule.create({
+      data: {
+        taskId: task.id,
+        pivots: recurringSchedule.pivots,
+        cadence: recurringSchedule.cadence,
+      },
+    });
+  }
+
   res.json(task);
 });
 
@@ -113,7 +126,7 @@ app.get("/today", async (req, res) => {
 
     const taskList = await getTodaysTasks(
       req.userId,
-      req.query.today as string
+      req.query.today as string,
     );
     res.status(200).json(taskList);
   } catch (error) {
@@ -126,7 +139,7 @@ app.get("/today", async (req, res) => {
 
 app.get("/upcoming", async (req, res) => {
   const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string)
+    getTomorrowDate(req.query.today as string),
   );
   try {
     const taskList = await extendedPrisma.task.findMany({
@@ -167,11 +180,11 @@ app.get("/standup", async (req, res) => {
   const isTodayMonday = new Date(req.query.today as string).getDay() === 1;
 
   const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string)
+    getTomorrowDate(req.query.today as string),
   );
 
   const todayDate = getDayWithoutTime(
-    getDateWithOffset(0, req.query.today as string)
+    getDateWithOffset(0, req.query.today as string),
   );
 
   // If the user has opted to ignore weekends, we need to check if today is Monday.
@@ -248,15 +261,23 @@ app.get("/standup", async (req, res) => {
 });
 
 app.delete("/completed", async (req, res) => {
+  const taskToDeleteQuery: Prisma.TaskWhereInput = {
+    isCompleted: true,
+    list: {
+      userId: req.userId,
+    },
+    recurringSchedule: {
+      is: {
+        
+      }
+    }
+    
+  };
+
   try {
     await extendedPrisma.taskTag.deleteMany({
       where: {
-        task: {
-          isCompleted: true,
-          list: {
-            userId: req.userId,
-          },
-        },
+        task: {},
       },
     });
 
@@ -313,8 +334,15 @@ app.put("/reorder", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { listId, taskName, dueDate, isCompleted, tagIds, dateCompleted } =
-    req.body;
+  const {
+    listId,
+    taskName,
+    dueDate,
+    isCompleted,
+    tagIds,
+    dateCompleted,
+    recurringSchedule,
+  } = req.body;
 
   const filteredTagIds = tagIds?.filter((tagId: number) => tagId >= 0);
 
@@ -325,6 +353,26 @@ app.put("/:id", async (req, res) => {
   }
 
   try {
+    // TODO: Update the recurring schedule
+    const initialTaskBeforeSave = await extendedPrisma.task.findFirst({
+      where: {
+        id: Number(id),
+      },
+      include: includeOnTask,
+    });
+
+    if (!initialTaskBeforeSave) {
+      return res.status(404).json({ message: "Task not found." });
+    }
+
+    if (initialTaskBeforeSave.recurringSchedule && !recurringSchedule) {
+      await extendedPrisma.recurringSchedule.delete({
+        where: {
+          id: initialTaskBeforeSave.recurringSchedule.id,
+        },
+      });
+    }
+
     const task = await extendedPrisma.task.update({
       where: {
         id: Number(id),
@@ -339,6 +387,7 @@ app.put("/:id", async (req, res) => {
         isCompleted,
         dateCompleted: dateCompleted ? new Date(dateCompleted) : null,
       },
+      include: includeOnTask,
     });
 
     await extendedPrisma.taskTag.deleteMany({
@@ -356,6 +405,8 @@ app.put("/:id", async (req, res) => {
       });
     }
 
+    // TODO: If the task is being marked as completed, and the task is using a recurring schedule, then go ahead and create the next task on the schedule
+
     res.json(task);
   } catch (error) {
     res.status(400).json({ message: "error updating task", error });
@@ -364,6 +415,22 @@ app.put("/:id", async (req, res) => {
 
 app.delete("/:id", async (req, res) => {
   const { id } = req.params;
+
+  const task = await extendedPrisma.task.findFirst({
+    where: {
+      id: Number(id),
+    },
+    include: includeOnTask,
+  });
+
+  if (!task) {
+    return res.status(404).json({ message: "Task not found" });
+  } else if (task.recurringSchedule) {
+    return res.status(400).json({
+      message:
+        "Cannot delete a task with a recurring schedule. Try deleting the schedule itself.",
+    });
+  }
 
   try {
     const task = await extendedPrisma.task.delete({
