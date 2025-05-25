@@ -1,6 +1,6 @@
 import { RecurringScheduleCadence } from "@prisma/client";
 
-interface RecurringScheduleRequestJson {
+export interface RecurringScheduleRequestJson {
   cadence: RecurringScheduleCadence;
   pivots: number[];
 }

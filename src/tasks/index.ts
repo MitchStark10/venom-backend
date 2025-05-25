@@ -6,6 +6,8 @@ import { getDateWithOffset, getTomorrowDate } from "../lib/getTomorrowDate";
 import { isNullOrUndefined } from "../lib/isNullOrUndefined";
 import { validateRecurringScheduleJson } from "../lib/validators/validateRecurringScheduleJson";
 import {Prisma} from "@prisma/client";
+import {updateRecurringSchedule} from "./updateRecurringSchedule";
+import {createNextTaskForRecurringSchedule} from "./createNextTaskForRecurringSchedule";
 
 const includeOnTask = {
   list: true,
@@ -353,7 +355,16 @@ app.put("/:id", async (req, res) => {
   }
 
   try {
-    // TODO: Update the recurring schedule
+    if (recurringSchedule) {
+      if (!validateRecurringScheduleJson(recurringSchedule)) {
+        return res
+          .status(400)
+          .json({ message: "recurringSchedule is not valid" });
+      }
+  
+      await updateRecurringSchedule(Number(id), recurringSchedule);
+    }
+
     const initialTaskBeforeSave = await extendedPrisma.task.findFirst({
       where: {
         id: Number(id),
@@ -405,7 +416,7 @@ app.put("/:id", async (req, res) => {
       });
     }
 
-    // TODO: If the task is being marked as completed, and the task is using a recurring schedule, then go ahead and create the next task on the schedule
+    await createNextTaskForRecurringSchedule(task);
 
     res.json(task);
   } catch (error) {

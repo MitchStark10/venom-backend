@@ -72,7 +72,6 @@ model RecurringSchedule {
   id      Int                      @id @default(autoincrement())
   task    Task                     @relation(fields: [taskId], references: [id]) // TODO: Define how to handle task deletion at the database level
   cadence RecurringScheduleCadence
-  pivots  Int[]
   taskId  Int                      @unique
 }
 
