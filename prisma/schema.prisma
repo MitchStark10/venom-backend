@@ -63,11 +63,6 @@ model Task {
   recurringSchedule RecurringSchedule?
 }
 
-// Example schedules:
-// Cadence: Daily, Pivots: []
-// Cadence: Weekly, Pivots: [0, 1, 6] (Weekly on Sunday, Monday, and Saturday)
-// Cadence: Monthly, Pivots: [1, 30] (Monthly on the 1st and 30th. Any month that doesn't have a 30th will have the task moved up to the final day of the month)
-// Cadence: Yearly, Pivots: [212] (yearly on the 212nd day of the year)
 model RecurringSchedule {
   id      Int                      @id @default(autoincrement())
   task    Task                     @relation(fields: [taskId], references: [id]) // TODO: Define how to handle task deletion at the database level
