@@ -373,6 +373,7 @@ app.put("/:id", async (req, res) => {
     }
 
     if (initialTaskBeforeSave.recurringSchedule && !recurringSchedule) {
+      console.log("Deleting recurring schedule for task:", id);
       await extendedPrisma.recurringSchedule.delete({
         where: {
           id: initialTaskBeforeSave.recurringSchedule.id,

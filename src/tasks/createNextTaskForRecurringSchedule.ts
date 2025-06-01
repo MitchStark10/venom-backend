@@ -18,6 +18,12 @@ interface TaskParam
 
 interface NewTaskToCreate extends Omit<Task, "id"> {
   id: undefined; // This will be set to undefined to create a new task
+  taskTag: undefined;
+  list: undefined;
+  dueDate: Date | null; // Ensure dueDate is a Date object
+  isCompleted: boolean;
+  recurringSchedule: undefined; // This will be set to undefined for the new task
+  tagIds?: string[]; // Optional, if you want to handle tags
 }
 
 export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
@@ -31,6 +37,12 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     ...task,
     id: undefined,
     dueDate: null,
+    dateCompleted: null,
+    taskTag: undefined,
+    list: undefined,
+    isCompleted: false,
+    recurringSchedule: undefined,
+    tagIds: undefined,
   };
 
   if (task.recurringSchedule.cadence === RecurringScheduleCadence.DAILY) {
@@ -57,21 +69,11 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     nextTask.dueDate = nextDate;
   }
 
-  const taskToCreate = {
-    ...nextTask,
-    dateCompleted: null,
-    taskTag: undefined,
-    list: undefined,
-    isCompleted: false,
-    recurringSchedule: undefined,
-    tagIds: undefined,
-  };
-
-  console.log("Task to create:", taskToCreate);
+  console.log("Task to create:", nextTask);
 
   // Assuming you have a function to save the task to the database
-  await extendedPrisma.task.create({
-    data: taskToCreate,
+  const newlyCreatedTask = await extendedPrisma.task.create({
+    data: nextTask,
   });
 
   // Re-create the task tag for the new task
@@ -86,7 +88,7 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
 
   console.log("Preparing to update recurring schedule with new task ID", {
     recurringScheduleId: task.recurringSchedule.id,
-    nextTaskId: nextTask.id,
+    nextTaskId: newlyCreatedTask.id,
   });
 
   // Update the recurring schedule to point to the new task
@@ -94,7 +96,7 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     await extendedPrisma.recurringSchedule.update({
       where: { id: task.recurringSchedule.id },
       data: {
-        taskId: nextTask.id,
+        taskId: newlyCreatedTask.id,
       },
     });
 
