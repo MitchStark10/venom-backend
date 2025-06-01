@@ -18,7 +18,6 @@ export const updateRecurringSchedule = async (
         id: existingRecurringSchedule.id,
       },
       data: {
-        pivots: recurringSchedule.pivots,
         cadence: recurringSchedule.cadence,
       },
     });
@@ -26,7 +25,6 @@ export const updateRecurringSchedule = async (
     await extendedPrisma.recurringSchedule.create({
       data: {
         taskId: taskId,
-        pivots: recurringSchedule.pivots,
         cadence: recurringSchedule.cadence,
       },
     });
