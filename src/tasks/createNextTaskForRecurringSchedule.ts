@@ -3,7 +3,7 @@ import { extendedPrisma } from "../lib/extendedPrisma";
 
 interface TaskParam
   extends Omit<
-    Prisma.TaskGetPayload<{ include: { recurringSchedule: true } }>,
+    Prisma.TaskGetPayload<{ include: { recurringSchedule: true; list: true } }>,
     "dueDate"
   > {
   dueDate: string | null;
@@ -50,9 +50,18 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     nextTask.dueDate = nextDate;
   }
 
+  const taskToCreate = {
+    ...nextTask,
+    dateCompleted: null,
+    isCompleted: false,
+    list: undefined,
+    recurringSchedule: undefined,
+  };
   // Assuming you have a function to save the task to the database
   await extendedPrisma.task.create({
-    data: nextTask,
+    data: {
+      ...nextTask,
+    },
   });
 
   return nextTask;
