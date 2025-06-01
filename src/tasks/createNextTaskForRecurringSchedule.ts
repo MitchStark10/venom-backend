@@ -57,8 +57,6 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     nextTask.dueDate = nextDate;
   }
 
-  console.log("Next task due date:", nextTask.dueDate);
-
   const taskToCreate = {
     ...nextTask,
     dateCompleted: null,
@@ -68,6 +66,9 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     recurringSchedule: undefined,
     tagIds: undefined,
   };
+
+  console.log("Task to create:", taskToCreate);
+
   // Assuming you have a function to save the task to the database
   await extendedPrisma.task.create({
     data: taskToCreate,
@@ -83,13 +84,21 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     });
   }
 
-  // Update the recurring schedule to point to the new task
-  await extendedPrisma.recurringSchedule.update({
-    where: { id: task.recurringSchedule.id },
-    data: {
-      taskId: nextTask.id,
-    },
+  console.log("Preparing to update recurring schedule with new task ID", {
+    recurringScheduleId: task.recurringSchedule.id,
+    nextTaskId: nextTask.id,
   });
+
+  // Update the recurring schedule to point to the new task
+  const updatedRecurringSchedule =
+    await extendedPrisma.recurringSchedule.update({
+      where: { id: task.recurringSchedule.id },
+      data: {
+        taskId: nextTask.id,
+      },
+    });
+
+  console.log("Recurring schedule updated:", updatedRecurringSchedule);
 
   return nextTask;
 };
