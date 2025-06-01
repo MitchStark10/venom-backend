@@ -76,21 +76,6 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     data: nextTask,
   });
 
-  // Re-create the task tag for the new task
-  if (task.taskTag?.length > 0) {
-    await extendedPrisma.taskTag.createMany({
-      data: task.taskTag.map((taskTag: TaskTag) => ({
-        taskId: task.id,
-        tagId: taskTag.tagId,
-      })),
-    });
-  }
-
-  console.log("Preparing to update recurring schedule with new task ID", {
-    recurringScheduleId: task.recurringSchedule.id,
-    nextTaskId: newlyCreatedTask.id,
-  });
-
   // Update the recurring schedule to point to the new task
   const updatedRecurringSchedule =
     await extendedPrisma.recurringSchedule.update({
@@ -101,6 +86,21 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     });
 
   console.log("Recurring schedule updated:", updatedRecurringSchedule);
+
+  // Re-create the task tag for the new task
+  if (task.taskTag?.length > 0) {
+    await extendedPrisma.taskTag.createMany({
+      data: task.taskTag.map((taskTag: TaskTag) => ({
+        taskId: newlyCreatedTask.id,
+        tagId: taskTag.tagId,
+      })),
+    });
+  }
+
+  console.log("Preparing to update recurring schedule with new task ID", {
+    recurringScheduleId: task.recurringSchedule.id,
+    nextTaskId: newlyCreatedTask.id,
+  });
 
   return nextTask;
 };
