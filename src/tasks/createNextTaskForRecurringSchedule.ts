@@ -1,9 +1,16 @@
-import { Prisma, RecurringScheduleCadence, Task } from "@prisma/client";
+import {
+  Prisma,
+  RecurringScheduleCadence,
+  Task,
+  TaskTag,
+} from "@prisma/client";
 import { extendedPrisma } from "../lib/extendedPrisma";
 
 interface TaskParam
   extends Omit<
-    Prisma.TaskGetPayload<{ include: { recurringSchedule: true; list: true } }>,
+    Prisma.TaskGetPayload<{
+      include: { recurringSchedule: true; list: true; taskTag: true };
+    }>,
     "dueDate"
   > {
   dueDate: string | null;
@@ -53,14 +60,25 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
   const taskToCreate = {
     ...nextTask,
     dateCompleted: null,
-    isCompleted: false,
+    taskTag: undefined,
     list: undefined,
+    isCompleted: false,
     recurringSchedule: undefined,
+    tagIds: undefined,
   };
   // Assuming you have a function to save the task to the database
   await extendedPrisma.task.create({
     data: taskToCreate,
   });
+
+  if (task.taskTag?.length > 0) {
+    await extendedPrisma.taskTag.createMany({
+      data: task.taskTag.map((taskTag: TaskTag) => ({
+        taskId: task.id,
+        tagId: taskTag.tagId,
+      })),
+    });
+  }
 
   return nextTask;
 };
