@@ -13,41 +13,39 @@ interface NewTaskToCreate extends Omit<Task, "id"> {
   id: undefined; // This will be set to undefined to create a new task
 }
 
-export const createNextTaskForRecurringSchedule = async (
-  completedTask: TaskParam
-) => {
-  if (!completedTask.recurringSchedule || !completedTask.dueDate) {
+export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
+  if (!task.recurringSchedule || !task.dueDate || !task.isCompleted) {
     return;
   }
 
+  console.log("Creating next task for recurring schedule:", task);
+
   const nextTask: NewTaskToCreate = {
-    ...completedTask,
+    ...task,
     id: undefined,
     dueDate: null,
   };
 
-  if (
-    completedTask.recurringSchedule.cadence === RecurringScheduleCadence.DAILY
-  ) {
+  if (task.recurringSchedule.cadence === RecurringScheduleCadence.DAILY) {
     nextTask.dueDate = new Date(
-      new Date(completedTask.dueDate).getTime() + 24 * 60 * 60 * 1000
+      new Date(task.dueDate).getTime() + 24 * 60 * 60 * 1000
     );
   } else if (
-    completedTask.recurringSchedule.cadence === RecurringScheduleCadence.WEEKLY
+    task.recurringSchedule.cadence === RecurringScheduleCadence.WEEKLY
   ) {
     nextTask.dueDate = new Date(
-      new Date(completedTask.dueDate).getTime() + 7 * 24 * 60 * 60 * 1000
+      new Date(task.dueDate).getTime() + 7 * 24 * 60 * 60 * 1000
     );
   } else if (
-    completedTask.recurringSchedule.cadence === RecurringScheduleCadence.MONTHLY
+    task.recurringSchedule.cadence === RecurringScheduleCadence.MONTHLY
   ) {
-    const nextDate = new Date(completedTask.dueDate);
+    const nextDate = new Date(task.dueDate);
     nextDate.setMonth(nextDate.getMonth() + 1);
     nextTask.dueDate = nextDate;
   } else if (
-    completedTask.recurringSchedule.cadence === RecurringScheduleCadence.YEARLY
+    task.recurringSchedule.cadence === RecurringScheduleCadence.YEARLY
   ) {
-    const nextDate = new Date(completedTask.dueDate);
+    const nextDate = new Date(task.dueDate);
     nextDate.setFullYear(nextDate.getFullYear() + 1);
     nextTask.dueDate = nextDate;
   }
