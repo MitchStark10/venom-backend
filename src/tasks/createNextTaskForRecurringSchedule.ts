@@ -9,7 +9,11 @@ import { extendedPrisma } from "../lib/extendedPrisma";
 interface TaskParam
   extends Omit<
     Prisma.TaskGetPayload<{
-      include: { recurringSchedule: true; list: true; taskTag: true };
+      include: {
+        recurringSchedule: true;
+        list: { include: { user: true } };
+        taskTag: true;
+      };
     }>,
     "dueDate"
   > {
@@ -31,7 +35,9 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     return;
   }
 
-  console.log("Creating next task for recurring schedule:", task);
+  // Check if this is a standup list and if the user wants to ignore weekends
+  const isStandupList = task.list?.isStandupList;
+  const userIgnoreWeekends = task.list?.user?.dailyReportIgnoreWeekends;
 
   const nextTask: NewTaskToCreate = {
     ...task,
@@ -45,7 +51,25 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
     tagIds: undefined,
   };
 
-  if (task.recurringSchedule.cadence === RecurringScheduleCadence.DAILY) {
+  if (
+    task.recurringSchedule.cadence === RecurringScheduleCadence.DAILY &&
+    isStandupList === true &&
+    userIgnoreWeekends === true
+  ) {
+    // Calculate the next due date, skipping weekends
+    let nextDate = new Date(task.dueDate);
+    nextDate.setDate(nextDate.getDate() + 1);
+    // If nextDate is Saturday (6), move to Monday
+    if (nextDate.getDay() === 6) {
+      nextDate.setDate(nextDate.getDate() + 2);
+    } else if (nextDate.getDay() === 0) {
+      // If nextDate is Sunday (0), move to Monday
+      nextDate.setDate(nextDate.getDate() + 1);
+    }
+    nextTask.dueDate = nextDate;
+  } else if (
+    task.recurringSchedule.cadence === RecurringScheduleCadence.DAILY
+  ) {
     nextTask.dueDate = new Date(
       new Date(task.dueDate).getTime() + 24 * 60 * 60 * 1000
     );
