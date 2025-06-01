@@ -416,6 +416,7 @@ app.put("/:id", async (req, res) => {
 
     res.json(task);
   } catch (error) {
+    console.error("Error occurred while updating task", error);
     res.status(400).json({ message: "error updating task", error });
   }
 });
