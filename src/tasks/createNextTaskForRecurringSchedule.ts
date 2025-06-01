@@ -59,9 +59,7 @@ export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
   };
   // Assuming you have a function to save the task to the database
   await extendedPrisma.task.create({
-    data: {
-      ...nextTask,
-    },
+    data: taskToCreate,
   });
 
   return nextTask;
