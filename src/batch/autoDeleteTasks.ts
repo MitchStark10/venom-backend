@@ -1,4 +1,4 @@
-import { AutoDeleteTasksOptions, Task } from "@prisma/client";
+import { AutoDeleteTasksOptions } from "@prisma/client";
 import { extendedPrisma } from "../lib/extendedPrisma";
 import { getDateWithOffset } from "../lib/getTomorrowDate";
 import { WhereInput } from "../types/prismaHelper";
@@ -66,6 +66,17 @@ export const autoDeleteTasks = async ({ isDryRun }: Params) => {
           },
         });
         console.log("Deleted task tags", deletedTaskTags);
+
+        const deletedRecurringSchedules =
+          await extendedPrisma.recurringSchedule.deleteMany({
+            where: {
+              taskId: {
+                in: tasksToDelete.map((task) => task.id),
+              },
+            },
+          });
+        console.log("Deleted recurring schedules", deletedRecurringSchedules);
+
         const deletedTasks = await extendedPrisma.task.deleteMany({
           where: {
             id: {

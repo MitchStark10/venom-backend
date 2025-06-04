@@ -270,11 +270,24 @@ app.delete("/completed", async (req, res) => {
   };
 
   try {
-    await extendedPrisma.taskTag.deleteMany({
+    const deletedTasks = await extendedPrisma.taskTag.deleteMany({
       where: {
         task: taskToDeleteQuery,
       },
     });
+
+    console.log("Deleted task tags for completed tasks", deletedTasks);
+
+    const deletedRecurringSchedules =
+      await extendedPrisma.recurringSchedule.deleteMany({
+        where: {
+          task: taskToDeleteQuery,
+        },
+      });
+    console.log(
+      "Deleted recurring schedules for completed tasks",
+      deletedRecurringSchedules
+    );
 
     const tasks = await extendedPrisma.task.deleteMany({
       where: taskToDeleteQuery,
