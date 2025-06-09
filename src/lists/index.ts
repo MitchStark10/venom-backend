@@ -1,6 +1,6 @@
 import express from "express";
-import { extendedPrisma } from "../lib/extendedPrisma";
 import { addOverdueTagToTasks } from "../lib/addOverdueTagToTasks";
+import { extendedPrisma } from "../lib/extendedPrisma";
 
 const app = express();
 
@@ -32,6 +32,7 @@ app.get("/", async (req, res) => {
               tag: true,
             },
           },
+          recurringSchedule: true,
         },
       },
     },
