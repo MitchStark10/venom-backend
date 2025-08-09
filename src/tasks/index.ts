@@ -426,7 +426,16 @@ app.put("/:id", async (req, res) => {
       });
     }
 
-    await createNextTaskForRecurringSchedule(task);
+    const user = await extendedPrisma.user.findUnique({
+      where: {
+        id: req.userId,
+      },
+    });
+
+    await createNextTaskForRecurringSchedule(
+      task,
+      Boolean(user?.dailyReportIgnoreWeekends)
+    );
 
     res.json(task);
   } catch (error) {

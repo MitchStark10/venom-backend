@@ -11,7 +11,7 @@ interface TaskParam
     Prisma.TaskGetPayload<{
       include: {
         recurringSchedule: true;
-        list: { include: { user: true } };
+        list: { include: { user: false } };
         taskTag: true;
       };
     }>,
@@ -30,14 +30,16 @@ interface NewTaskToCreate extends Omit<Task, "id"> {
   tagIds?: string[]; // Optional, if you want to handle tags
 }
 
-export const createNextTaskForRecurringSchedule = async (task: TaskParam) => {
+export const createNextTaskForRecurringSchedule = async (
+  task: TaskParam,
+  userIgnoreWeekends: boolean
+) => {
   if (!task.recurringSchedule || !task.dueDate || !task.isCompleted) {
     return;
   }
 
   // Check if this is a standup list and if the user wants to ignore weekends
   const isStandupList = task.list?.isStandupList;
-  const userIgnoreWeekends = task.list?.user?.dailyReportIgnoreWeekends;
 
   const nextTask: NewTaskToCreate = {
     ...task,
