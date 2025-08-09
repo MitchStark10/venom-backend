@@ -10,7 +10,15 @@ import { createNextTaskForRecurringSchedule } from "./createNextTaskForRecurring
 import { updateRecurringSchedule } from "./updateRecurringSchedule";
 
 const includeOnTask = {
-  list: { include: { user: true } },
+  list: {
+    select: {
+      id: true,
+      listName: true,
+      userId: true,
+      isStandupList: true,
+      order: true,
+    },
+  },
   taskTag: {
     include: {
       tag: true,
