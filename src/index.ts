@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import express, { Express, Request, Response } from "express";
 import cron from "node-cron";
 import { autoDeleteTasks } from "./batch/autoDeleteTasks";
+import mcpRouter from "./mcp/index";
 import { authMiddleware } from "./middleware/authMiddleware";
 
 dotenv.config();
@@ -12,7 +13,8 @@ const port = process.env.PORT || 3000;
 
 const allowedDomain = process.env.CORS_ALLOWED_DOMAINS;
 
-const origins = ["http://localhost:3000"];
+// MCP requires claude.ai to be an allowed origin
+const origins = ["http://localhost:3000", "https://claude.ai"];
 
 if (allowedDomain) {
   origins.push(...allowedDomain.split(","));
@@ -26,9 +28,15 @@ app.use(
 
 app.use(bodyParser.json());
 
+// Serve static files for MCP
+app.use(express.static("public"));
+
 app.get("/", (_req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
+
+// MCP router
+app.use("/api", mcpRouter);
 
 app.use("/users", require("./users/publicUsers"));
 app.use("/feedback", require("./feedback"));

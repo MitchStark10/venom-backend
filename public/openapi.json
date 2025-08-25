@@ -1,0 +1,128 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Venom Backend Tools",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/mcp": {
+      "post": {
+        "summary": "Entry point for all tool use.",
+        "operationId": "useTool",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tool_name": {
+                    "type": "string",
+                    "description": "The name of the tool to use."
+                  },
+                  "inputs": {
+                    "type": "object",
+                    "description": "The inputs for the tool, matching the tool's input_schema.",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "tool_name",
+                  "inputs"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tool execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tool_result": {
+                      "type": "object",
+                      "description": "The output of the tool, matching the tool's output_schema.",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique identifier for the task."
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the task."
+          },
+          "content": {
+            "type": "string",
+            "description": "The detailed content or description of the task."
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The due date of the task in ISO 8601 format."
+          },
+          "completed": {
+            "type": "boolean",
+            "description": "Whether the task is completed or not."
+          }
+        }
+      }
+    }
+  },
+  "x-anthropic-tools": [
+    {
+      "name": "getTasks",
+      "description": "Get a list of the user's tasks. The user is identified by the authentication token.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "output_schema": {
+        "type": 'object',
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

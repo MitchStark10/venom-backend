@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Venom Task Management",
+  "name_for_model": "venom_task_management",
+  "description_for_human": "A set of tools to manage your tasks and projects.",
+  "description_for_model": "An API for managing tasks. Use it to create, retrieve, update, and delete tasks for a user.",
+  "auth": {
+    "type": "bearer",
+    "instructions": "Log in to the Venom application to obtain a bearer token (JWT). The token should be provided in the 'Authorization' header with the 'Bearer' scheme."
+  },
+  "api": {
+    "type": "openapi",
+    "url": "/openapi.json"
+  },
+  "contact_email": "user@example.com",
+  "legal_info_url": "https://www.example.com/legal"
+}
