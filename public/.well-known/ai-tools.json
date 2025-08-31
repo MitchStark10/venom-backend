@@ -6,12 +6,12 @@
   "description_for_model": "An API for managing tasks. Use it to create, retrieve, update, and delete tasks for a user.",
   "auth": {
     "type": "bearer",
-    "instructions": "Log in to the Venom application to obtain a bearer token (JWT). The token should be provided in the 'Authorization' header with the 'Bearer' scheme."
+    "instructions": "Log in to the Venom application to obtain a bearer token (JWT). Your token can be requested via the settings page. Note that tokens expire automatically after 6 months."
   },
   "api": {
     "type": "openapi",
     "url": "/openapi.json"
   },
-  "contact_email": "user@example.com",
-  "legal_info_url": "https://www.example.com/legal"
+  "contact_email": "mitchstark10@gmail.com"
 }
+

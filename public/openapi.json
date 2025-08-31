@@ -36,10 +36,7 @@
                     "additionalProperties": true
                   }
                 },
-                "required": [
-                  "tool_name",
-                  "inputs"
-                ]
+                "required": ["tool_name", "inputs"]
               }
             }
           }
@@ -56,6 +53,252 @@
                       "type": "object",
                       "description": "The output of the tool, matching the tool's output_schema.",
                       "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks": {
+      "get": {
+        "summary": "Get a list of the user's tasks.",
+        "operationId": "getTasks",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of tasks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/today": {
+      "post": {
+        "summary": "Get a list of the user's tasks for today.",
+        "operationId": "getTodaysTasks",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientDate": {
+                    "type": "string",
+                    "description": "The client's current date in ISO 8601 format."
+                  }
+                },
+                "required": ["clientDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A list of tasks for today.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/upcoming": {
+      "post": {
+        "summary": "Get a list of the user's upcoming tasks.",
+        "operationId": "getUpcomingTasks",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientDate": {
+                    "type": "string",
+                    "description": "The client's current date in ISO 8601 format."
+                  }
+                },
+                "required": ["clientDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A list of upcoming tasks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/completed": {
+      "get": {
+        "summary": "Get a list of the user's completed tasks.",
+        "operationId": "getCompletedTasks",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of completed tasks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/standup": {
+      "post": {
+        "summary": "Get a list of the user's standup tasks.",
+        "operationId": "getStandupTasks",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientDate": {
+                    "type": "string",
+                    "description": "The client's current date in ISO 8601 format."
+                  }
+                },
+                "required": ["clientDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A list of standup tasks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandupTasks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tasks/by-list": {
+      "post": {
+        "summary": "Get a list of non-completed tasks for a given list.",
+        "operationId": "getTasksByList",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "list_id": {
+                    "type": "integer",
+                    "description": "The ID of the list to retrieve tasks from."
+                  }
+                },
+                "required": ["list_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A list of non-completed tasks for the given list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
                     }
                   }
                 }
@@ -100,22 +343,23 @@
             "description": "Whether the task is completed or not."
           }
         }
-      }
-    }
-  },
-  "x-anthropic-tools": [
-    {
-      "name": "getTasks",
-      "description": "Get a list of the user's tasks. The user is identified by the authentication token.",
-      "input_schema": {
-        "type": "object",
-        "properties": {},
-        "required": []
       },
-      "output_schema": {
-        "type": 'object',
+      "StandupTasks": {
+        "type": "object",
         "properties": {
-          "tasks": {
+          "today": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "yesterday": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            }
+          },
+          "blocked": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Task"
@@ -124,5 +368,107 @@
         }
       }
     }
+  },
+  "x-anthropic-tools": [
+    {
+      "name": "createTask",
+      "description": "Create a new task on a list.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "taskName": {
+            "type": "string",
+            "description": "The name of the task."
+          },
+          "listId": {
+            "type": "integer",
+            "description": "The ID of the list to create the task on."
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The due date of the task in ISO 8601 format."
+          },
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "An array of tag IDs to associate with the task."
+          },
+          "recurringSchedule": {
+            "type": "object",
+            "properties": {
+              "cadence": {
+                "type": "string",
+                "description": "The cadence of the recurring schedule (e.g., daily, weekly, monthly)."
+              }
+            },
+            "description": "The recurring schedule for the task."
+          }
+        },
+        "required": ["taskName", "listId"]
+      },
+      "output_schema": {
+        "$ref": "#/components/schemas/Task"
+      }
+    },
+    {
+      "name": "updateTask",
+      "description": "Update an existing task.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The ID of the task to update."
+          },
+          "taskName": {
+            "type": "string",
+            "description": "The new name of the task."
+          },
+          "listId": {
+            "type": "integer",
+            "description": "The new ID of the list to move the task to."
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The new due date of the task in ISO 8601 format."
+          },
+          "isCompleted": {
+            "type": "boolean",
+            "description": "Whether the task is completed or not."
+          },
+          "dateCompleted": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the task was completed in ISO 8601 format."
+          },
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "The new array of tag IDs to associate with the task."
+          },
+          "recurringSchedule": {
+            "type": "object",
+            "properties": {
+              "cadence": {
+                "type": "string",
+                "description": "The cadence of the recurring schedule (e.g., daily, weekly, monthly)."
+              }
+            },
+            "description": "The new recurring schedule for the task."
+          }
+        },
+        "required": ["id"]
+      },
+      "output_schema": {
+        "$ref": "#/components/schemas/Task"
+      }
+    }
   ]
 }
+

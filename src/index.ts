@@ -13,7 +13,6 @@ const port = process.env.PORT || 3000;
 
 const allowedDomain = process.env.CORS_ALLOWED_DOMAINS;
 
-// MCP requires claude.ai to be an allowed origin
 const origins = ["http://localhost:3000", "https://claude.ai"];
 
 if (allowedDomain) {
@@ -35,14 +34,12 @@ app.get("/", (_req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
-// MCP router
-app.use("/api", mcpRouter);
-
 app.use("/users", require("./users/publicUsers"));
 app.use("/feedback", require("./feedback"));
 
 app.use(authMiddleware);
 
+app.use("/api", mcpRouter);
 app.use("/lists", require("./lists"));
 app.use("/tasks", require("./tasks"));
 app.use("/tags", require("./tags"));

@@ -27,42 +27,121 @@ const includeOnTask = {
   recurringSchedule: true,
 };
 
-const getTodaysTasks = async (userId: number, clientDate: string) => {
-  const lt = getDayWithoutTime(getTomorrowDate(clientDate));
-  const taskList = await extendedPrisma.task.findMany({
+export const updateTask = async (
+  userId: number,
+  taskId: number,
+  taskData: {
+    listId?: number;
+    taskName?: string;
+    dueDate?: string;
+    isCompleted?: boolean;
+    tagIds?: number[];
+    dateCompleted?: string;
+    recurringSchedule?: any;
+  }
+) => {
+  const { listId, taskName, dueDate, isCompleted, tagIds, dateCompleted, recurringSchedule } = taskData;
+
+  const filteredTagIds = tagIds?.filter((tagId: number) => tagId >= 0);
+
+  if (!taskName && !dueDate) {
+    throw new Error("taskName or dueDate is required");
+  }
+
+  if (recurringSchedule) {
+    if (!validateRecurringScheduleJson(recurringSchedule)) {
+      throw new Error("recurringSchedule is not valid");
+    }
+
+    await updateRecurringSchedule(Number(taskId), recurringSchedule);
+  }
+
+  const initialTaskBeforeSave = await extendedPrisma.task.findFirst({
     where: {
-      isCompleted: false,
-      dueDate: {
-        lt,
-      },
-      list: {
-        userId,
-      },
-    },
-    orderBy: {
-      listViewOrder: "asc",
+      id: Number(taskId),
     },
     include: includeOnTask,
   });
 
-  const taskListWithOverdueTags = addOverdueTagToTasks(taskList, clientDate);
+  if (!initialTaskBeforeSave) {
+    throw new Error("Task not found.");
+  }
 
-  return taskListWithOverdueTags;
+  if (initialTaskBeforeSave.recurringSchedule && !recurringSchedule) {
+    console.log("Deleting recurring schedule for task:", taskId);
+    await extendedPrisma.recurringSchedule.delete({
+      where: {
+        id: initialTaskBeforeSave.recurringSchedule.id,
+      },
+    });
+  }
+
+  const task = await extendedPrisma.task.update({
+    where: {
+      id: Number(taskId),
+      list: {
+        userId: userId,
+      },
+    },
+    data: {
+      listId: listId ? Number(listId) : undefined,
+      taskName,
+      dueDate: dueDate ? new Date(dueDate) : dueDate,
+      isCompleted,
+      dateCompleted: dateCompleted ? new Date(dateCompleted) : null,
+    },
+    include: includeOnTask,
+  });
+
+  await extendedPrisma.taskTag.deleteMany({
+    where: {
+      taskId: task.id,
+    },
+  });
+
+  if (filteredTagIds?.length > 0) {
+    await extendedPrisma.taskTag.createMany({
+      data: filteredTagIds.map((tagId: number) => ({
+        taskId: task.id,
+        tagId,
+      })),
+    });
+  }
+
+  const user = await extendedPrisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  await createNextTaskForRecurringSchedule(
+    task,
+    Boolean(user?.dailyReportIgnoreWeekends)
+  );
+
+  return task;
 };
 
-const app = express();
-
-app.post("/", async (req, res) => {
-  const { taskName, listId, dueDate, tagIds, recurringSchedule } = req.body;
+export const createTask = async (
+  userId: number,
+  taskData: {
+    taskName: string;
+    listId: number;
+    dueDate?: string;
+    tagIds?: number[];
+    recurringSchedule?: any;
+  }
+) => {
+  const { taskName, listId, dueDate, tagIds, recurringSchedule } = taskData;
 
   if (!taskName || !listId) {
-    return res.status(400).json({ message: "taskName or listid is required" });
+    throw new Error("taskName or listid is required");
   }
 
   const associatedList = await extendedPrisma.list.findFirst({
     where: {
       id: Number(listId),
-      userId: req.userId,
+      userId: userId,
     },
     include: {
       tasks: true,
@@ -70,7 +149,7 @@ app.post("/", async (req, res) => {
   });
 
   if (!associatedList) {
-    return res.status(400).json({ message: "list not found" });
+    throw new Error("list not found");
   }
 
   const task = await extendedPrisma.task.create({
@@ -101,23 +180,187 @@ app.post("/", async (req, res) => {
     });
   }
 
-  res.json(task);
+  return task;
+};
+
+export const getTasksByList = async (userId: number, listId: number) => {
+  const list = await extendedPrisma.list.findFirst({
+    where: {
+      id: listId,
+      userId: userId,
+    },
+  });
+
+  if (!list) {
+    throw new Error("List not found");
+  }
+
+  return extendedPrisma.task.findMany({
+    where: {
+      listId: listId,
+      isCompleted: false,
+    },
+    include: includeOnTask,
+  });
+};
+
+export const getTodaysTasks = async (userId: number, clientDate: string) => {
+  const lt = getDayWithoutTime(getTomorrowDate(clientDate));
+  const taskList = await extendedPrisma.task.findMany({
+    where: {
+      isCompleted: false,
+      dueDate: {
+        lt,
+      },
+      list: {
+        userId,
+      },
+    },
+    orderBy: {
+      listViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+
+  const taskListWithOverdueTags = addOverdueTagToTasks(taskList, clientDate);
+
+  return taskListWithOverdueTags;
+};
+
+export const getCompletedTasks = async (userId: number) => {
+  return extendedPrisma.task.findMany({
+    where: {
+      isCompleted: true,
+      list: {
+        userId: userId,
+      },
+    },
+    orderBy: {
+      combinedViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+};
+
+export const getUpcomingTasks = async (userId: number, clientDate: string) => {
+  const tomorrowDate = getDayWithoutTime(getTomorrowDate(clientDate));
+  return extendedPrisma.task.findMany({
+    where: {
+      isCompleted: false,
+      dueDate: {
+        gte: tomorrowDate,
+      },
+      list: {
+        userId: userId,
+      },
+    },
+    orderBy: {
+      combinedViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+};
+
+export const getStandupTasks = async (userId: number, clientDate: string) => {
+  const user = await extendedPrisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  const isTodayMonday = new Date(clientDate).getDay() === 1;
+
+  const tomorrowDate = getDayWithoutTime(getTomorrowDate(clientDate));
+
+  const todayDate = getDayWithoutTime(getDateWithOffset(0, clientDate));
+
+  // If the user has opted to ignore weekends, we need to check if today is Monday.
+  // If it is, we need to get the tasks from Friday, otherwise we get the tasks from yesterday
+  const yeseterdayDate =
+    user?.dailyReportIgnoreWeekends && isTodayMonday
+      ? getDayWithoutTime(getDateWithOffset(-3, clientDate))
+      : getDayWithoutTime(getDateWithOffset(-1, clientDate));
+
+  const todayTaskList = await extendedPrisma.task.findMany({
+    where: {
+      isCompleted: false,
+      dueDate: {
+        lt: tomorrowDate,
+      },
+      list: {
+        userId: userId,
+        isStandupList: true,
+      },
+    },
+    orderBy: {
+      combinedViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+
+  const completedYeseterdayTaskList = await extendedPrisma.task.findMany({
+    where: {
+      isCompleted: true,
+      dateCompleted: {
+        gte: yeseterdayDate,
+        lte: todayDate,
+      },
+      list: {
+        userId: userId,
+        isStandupList: true,
+      },
+    },
+    orderBy: {
+      combinedViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+
+  const blockedTaskList = await extendedPrisma.task.findMany({
+    where: {
+      isCompleted: false,
+      taskTag: {
+        some: {
+          tag: {
+            tagName: {
+              equals: "blocked",
+              mode: "insensitive",
+            },
+          },
+        },
+      },
+      list: {
+        userId: userId,
+        isStandupList: true,
+      },
+    },
+    orderBy: {
+      combinedViewOrder: "asc",
+    },
+    include: includeOnTask,
+  });
+
+  return {
+    today: addOverdueTagToTasks(todayTaskList, todayDate),
+    yesterday: completedYeseterdayTaskList,
+    blocked: blockedTaskList,
+  };
+};
+
+const app = express();
+
+app.post("/", async (req, res) => {
+  try {
+    const task = await createTask(req.userId, req.body);
+    res.json(task);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 });
 
 app.get("/completed", async (req, res) => {
   try {
-    const taskList = await extendedPrisma.task.findMany({
-      where: {
-        isCompleted: true,
-        list: {
-          userId: req.userId,
-        },
-      },
-      orderBy: {
-        combinedViewOrder: "asc",
-      },
-      include: includeOnTask,
-    });
+    const taskList = await getCompletedTasks(req.userId);
     res.status(200).json(taskList);
   } catch (error) {
     console.error("Error occurred while retrieving completed tasks", error);
@@ -147,25 +390,11 @@ app.get("/today", async (req, res) => {
 });
 
 app.get("/upcoming", async (req, res) => {
-  const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string)
-  );
   try {
-    const taskList = await extendedPrisma.task.findMany({
-      where: {
-        isCompleted: false,
-        dueDate: {
-          gte: tomorrowDate,
-        },
-        list: {
-          userId: req.userId,
-        },
-      },
-      orderBy: {
-        combinedViewOrder: "asc",
-      },
-      include: includeOnTask,
-    });
+    const taskList = await getUpcomingTasks(
+      req.userId,
+      req.query.today as string
+    );
     res.status(200).json(taskList);
   } catch (error) {
     console.error("Error occurred while retrieving upcoming tasks", error);
@@ -180,93 +409,15 @@ app.get("/standup", async (req, res) => {
     return res.status(400).json({ message: "userId is required" });
   }
 
-  const user = await extendedPrisma.user.findUnique({
-    where: {
-      id: req.userId,
-    },
-  });
-
-  const isTodayMonday = new Date(req.query.today as string).getDay() === 1;
-
-  const tomorrowDate = getDayWithoutTime(
-    getTomorrowDate(req.query.today as string)
-  );
-
-  const todayDate = getDayWithoutTime(
-    getDateWithOffset(0, req.query.today as string)
-  );
-
-  // If the user has opted to ignore weekends, we need to check if today is Monday.
-  // If it is, we need to get the tasks from Friday, otherwise we get the tasks from yesterday
-  const yeseterdayDate =
-    user?.dailyReportIgnoreWeekends && isTodayMonday
-      ? getDayWithoutTime(getDateWithOffset(-3, req.query.today as string))
-      : getDayWithoutTime(getDateWithOffset(-1, req.query.today as string));
-
-  const todayTaskList = await extendedPrisma.task.findMany({
-    where: {
-      isCompleted: false,
-      dueDate: {
-        lt: tomorrowDate,
-      },
-      list: {
-        userId: req.userId,
-        isStandupList: true,
-      },
-    },
-    orderBy: {
-      combinedViewOrder: "asc",
-    },
-    include: includeOnTask,
-  });
-
-  const completedYeseterdayTaskList = await extendedPrisma.task.findMany({
-    where: {
-      isCompleted: true,
-      dateCompleted: {
-        gte: yeseterdayDate,
-        lte: todayDate,
-      },
-      list: {
-        userId: req.userId,
-        isStandupList: true,
-      },
-    },
-    orderBy: {
-      combinedViewOrder: "asc",
-    },
-    include: includeOnTask,
-  });
-
-  const blockedTaskList = await extendedPrisma.task.findMany({
-    where: {
-      isCompleted: false,
-      taskTag: {
-        some: {
-          tag: {
-            tagName: {
-              equals: "blocked",
-              mode: "insensitive",
-            },
-          },
-        },
-      },
-      list: {
-        userId: req.userId,
-        isStandupList: true,
-      },
-    },
-    orderBy: {
-      combinedViewOrder: "asc",
-    },
-    include: includeOnTask,
-  });
-
-  res.status(200).json({
-    today: addOverdueTagToTasks(todayTaskList, todayDate),
-    yesterday: completedYeseterdayTaskList,
-    blocked: blockedTaskList,
-  });
+  try {
+    const result = await getStandupTasks(req.userId, req.query.today as string);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error occurred while retrieving standup tasks", error);
+    res
+      .status(400)
+      .json({ message: "Error occurred while retrieving standup tasks" });
+  }
 });
 
 app.delete("/completed", async (req, res) => {
@@ -352,98 +503,8 @@ app.put("/reorder", async (req, res) => {
 
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const {
-    listId,
-    taskName,
-    dueDate,
-    isCompleted,
-    tagIds,
-    dateCompleted,
-    recurringSchedule,
-  } = req.body;
-
-  const filteredTagIds = tagIds?.filter((tagId: number) => tagId >= 0);
-
-  console.log("received tag ids", filteredTagIds);
-
-  if (!taskName && !dueDate) {
-    return res.status(400).json({ message: "taskName or dueDate is required" });
-  }
-
   try {
-    if (recurringSchedule) {
-      if (!validateRecurringScheduleJson(recurringSchedule)) {
-        return res
-          .status(400)
-          .json({ message: "recurringSchedule is not valid" });
-      }
-
-      await updateRecurringSchedule(Number(id), recurringSchedule);
-    }
-
-    const initialTaskBeforeSave = await extendedPrisma.task.findFirst({
-      where: {
-        id: Number(id),
-      },
-      include: includeOnTask,
-    });
-
-    if (!initialTaskBeforeSave) {
-      return res.status(404).json({ message: "Task not found." });
-    }
-
-    if (initialTaskBeforeSave.recurringSchedule && !recurringSchedule) {
-      console.log("Deleting recurring schedule for task:", id);
-      await extendedPrisma.recurringSchedule.delete({
-        where: {
-          id: initialTaskBeforeSave.recurringSchedule.id,
-        },
-      });
-    }
-
-    const task = await extendedPrisma.task.update({
-      where: {
-        id: Number(id),
-        list: {
-          userId: req.userId,
-        },
-      },
-      data: {
-        listId: listId ? Number(listId) : undefined,
-        taskName,
-        dueDate: dueDate ? new Date(dueDate) : dueDate,
-        isCompleted,
-        dateCompleted: dateCompleted ? new Date(dateCompleted) : null,
-      },
-      include: includeOnTask,
-    });
-
-    await extendedPrisma.taskTag.deleteMany({
-      where: {
-        taskId: task.id,
-      },
-    });
-
-    if (filteredTagIds?.length > 0) {
-      await extendedPrisma.taskTag.createMany({
-        data: filteredTagIds.map((tagId: number) => ({
-          taskId: task.id,
-          tagId,
-        })),
-      });
-    }
-
-    const user = await extendedPrisma.user.findUnique({
-      where: {
-        id: req.userId,
-      },
-    });
-
-    await createNextTaskForRecurringSchedule(
-      task,
-      Boolean(user?.dailyReportIgnoreWeekends)
-    );
-
+    const task = await updateTask(req.userId, Number(id), req.body);
     res.json(task);
   } catch (error) {
     console.error("Error occurred while updating task", error);
