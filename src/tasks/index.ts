@@ -40,9 +40,17 @@ export const updateTask = async (
     recurringSchedule?: any;
   }
 ) => {
-  const { listId, taskName, dueDate, isCompleted, tagIds, dateCompleted, recurringSchedule } = taskData;
+  const {
+    listId,
+    taskName,
+    dueDate,
+    isCompleted,
+    tagIds,
+    dateCompleted,
+    recurringSchedule,
+  } = taskData;
 
-  const filteredTagIds = tagIds?.filter((tagId: number) => tagId >= 0);
+  const filteredTagIds = tagIds?.filter((tagId: number) => tagId >= 0) || [];
 
   if (!taskName && !dueDate) {
     throw new Error("taskName or dueDate is required");
@@ -162,7 +170,7 @@ export const createTask = async (
     },
   });
 
-  if (tagIds?.length > 0) {
+  if (tagIds && tagIds.length > 0) {
     await extendedPrisma.taskTag.createMany({
       data: tagIds.map((tagId: number) => ({
         taskId: task.id,
@@ -351,16 +359,16 @@ const app = express();
 
 app.post("/", async (req, res) => {
   try {
-    const task = await createTask(req.userId, req.body);
+    const task = await createTask(req.userId!!, req.body);
     res.json(task);
-  } catch (error) {
+  } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
 });
 
 app.get("/completed", async (req, res) => {
   try {
-    const taskList = await getCompletedTasks(req.userId);
+    const taskList = await getCompletedTasks(req.userId!!);
     res.status(200).json(taskList);
   } catch (error) {
     console.error("Error occurred while retrieving completed tasks", error);
@@ -392,7 +400,7 @@ app.get("/today", async (req, res) => {
 app.get("/upcoming", async (req, res) => {
   try {
     const taskList = await getUpcomingTasks(
-      req.userId,
+      req.userId!!,
       req.query.today as string
     );
     res.status(200).json(taskList);
@@ -504,7 +512,7 @@ app.put("/reorder", async (req, res) => {
 app.put("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const task = await updateTask(req.userId, Number(id), req.body);
+    const task = await updateTask(req.userId!!, Number(id), req.body);
     res.json(task);
   } catch (error) {
     console.error("Error occurred while updating task", error);
