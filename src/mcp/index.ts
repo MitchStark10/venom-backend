@@ -9,11 +9,9 @@ import {
   createTask,
   updateTask,
 } from "../tasks";
-import { loadDiscoveryDocument } from "../lib/discovery";
+import { discoveryDocument } from "./discovery";
 
 const router = express.Router();
-
-const discoveryDocument = loadDiscoveryDocument();
 
 interface AuthenticatedRequest extends Request {
   userId?: number;
@@ -38,7 +36,7 @@ const includeOnTask = {
 };
 
 router.post("/mcp", async (req: AuthenticatedRequest, res: Response) => {
-  const { tool_name, resource_name, inputs } = req.body;
+  const { tool_name, resource_name, inputs, id } = req.body;
   const userId = req.userId;
 
   try {
@@ -106,7 +104,11 @@ router.post("/mcp", async (req: AuthenticatedRequest, res: Response) => {
             .json({ error: `Resource '${resource_name}' not found.` });
       }
     } else {
-      return res.json(discoveryDocument);
+      return res.json({
+        jsonrpc: "2.0",
+        result: discoveryDocument,
+        id,
+      });
     }
 
     res.json({ tool_result: result });
