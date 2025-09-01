@@ -9,8 +9,11 @@ import {
   createTask,
   updateTask,
 } from "../tasks";
+import { loadDiscoveryDocument } from "../lib/discovery";
 
 const router = express.Router();
+
+const discoveryDocument = loadDiscoveryDocument();
 
 interface AuthenticatedRequest extends Request {
   userId?: number;
@@ -103,7 +106,7 @@ router.post("/mcp", async (req: AuthenticatedRequest, res: Response) => {
             .json({ error: `Resource '${resource_name}' not found.` });
       }
     } else {
-      return res.status(400).json({ error: "No tool or resource specified." });
+      return res.json(discoveryDocument);
     }
 
     res.json({ tool_result: result });
