@@ -6,6 +6,7 @@ import cron from "node-cron";
 import { autoDeleteTasks } from "./batch/autoDeleteTasks";
 import mcpRouter from "./mcp/index";
 import { authMiddleware } from "./middleware/authMiddleware";
+import tasks from "./tasks";
 
 dotenv.config();
 const app: Express = express();
@@ -41,7 +42,7 @@ app.use(authMiddleware);
 
 app.use("/api", mcpRouter);
 app.use("/lists", require("./lists"));
-app.use("/tasks", require("./tasks"));
+app.use("/tasks", tasks);
 app.use("/tags", require("./tags"));
 app.use("/settings", require("./settings/settings"));
 
