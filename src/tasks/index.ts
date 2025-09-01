@@ -75,7 +75,14 @@ export const updateTask = async (
     throw new Error("Task not found.");
   }
 
-  if (initialTaskBeforeSave.recurringSchedule && !recurringSchedule) {
+  const isChangingCompletionStatus =
+    Boolean(isCompleted) !== Boolean(initialTaskBeforeSave.isCompleted);
+
+  if (
+    initialTaskBeforeSave.recurringSchedule &&
+    !recurringSchedule &&
+    !isChangingCompletionStatus
+  ) {
     console.log("Deleting recurring schedule for task:", taskId);
     await extendedPrisma.recurringSchedule.delete({
       where: {

@@ -48,7 +48,13 @@ interface McpRequestBody {
 interface McpToolCallResponseBody {
   jsonrpc: "2.0";
   id: string | number | null;
-  result: any;
+  result: {
+    content: {
+      type: "text";
+      text: string;
+    }[];
+    structuredContent: any;
+  };
 }
 
 app.post("/mcp", async (req, res) => {
@@ -99,7 +105,11 @@ app.post("/mcp", async (req, res) => {
         result = { tasks };
         break;
       case "getTodaysTasks":
-        console.log("MCP: Fetching today's tasks for user:", userId);
+        console.log(
+          "MCP: Fetching today's tasks for user:",
+          userId,
+          args.clientDate
+        );
         const todaysTasks = await getTodaysTasks(userId, args.clientDate);
         result = { tasks: todaysTasks };
         break;
@@ -130,8 +140,18 @@ app.post("/mcp", async (req, res) => {
     const formattedResponse: McpToolCallResponseBody = {
       jsonrpc: "2.0",
       id,
-      result,
+      result: {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result),
+          },
+        ],
+        structuredContent: result,
+      },
     };
+
+    console.log("MCP: Responding with:", JSON.stringify(formattedResponse));
 
     res.json(formattedResponse);
   } catch (error) {
