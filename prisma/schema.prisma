@@ -2,98 +2,99 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    provider      = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 enum AutoDeleteTasksOptions {
-  NEVER
-  ONE_WEEK
-  TWO_WEEKS
-  ONE_MONTH
+    NEVER
+    ONE_WEEK
+    TWO_WEEKS
+    ONE_MONTH
 }
 
 enum RecurringScheduleCadence {
-  DAILY
-  WEEKLY
-  MONTHLY
-  YEARLY
+    DAILY
+    WEEKLY
+    MONTHLY
+    YEARLY
 }
 
 model User {
-  id                        Int                    @id @default(autoincrement())
-  email                     String                 @unique
-  hashedPass                String
-  autoDeleteTasks           AutoDeleteTasksOptions @default(NEVER)
-  dailyReportIgnoreWeekends Boolean                @default(true)
-  resetPasswordToken        String?
-  resetPasswordTokenExpiry  DateTime?
+    id                        Int                    @id @default(autoincrement())
+    email                     String                 @unique
+    hashedPass                String
+    autoDeleteTasks           AutoDeleteTasksOptions @default(NEVER)
+    dailyReportIgnoreWeekends Boolean                @default(true)
+    resetPasswordToken        String?
+    resetPasswordTokenExpiry  DateTime?
 
-  lists List[] @relation("userLists")
-  Tag   Tag[]
+    lists List[] @relation("userLists")
+    Tag   Tag[]
 }
 
 model List {
-  id            Int     @id @default(autoincrement())
-  listName      String
-  userId        Int
-  user          User    @relation(fields: [userId], references: [id], name: "userLists", map: "List_userId_userLists_fkey")
-  tasks         Task[]
-  order         Int     @default(0)
-  isStandupList Boolean @default(false)
+    id                 Int     @id @default(autoincrement())
+    listName           String
+    userId             Int
+    user               User    @relation(fields: [userId], references: [id], name: "userLists", map: "List_userId_userLists_fkey")
+    tasks              Task[]
+    order              Int     @default(0)
+    isStandupList      Boolean @default(false)
+    showCompletedTasks Boolean @default(false)
 }
 
 model Task {
-  id                Int       @id @default(autoincrement())
-  taskName          String
-  listViewOrder     Int       @default(0)
-  combinedViewOrder Int       @default(0)
-  dueDate           DateTime?
-  dateCompleted     DateTime?
-  isCompleted       Boolean   @default(false)
+    id                Int       @id @default(autoincrement())
+    taskName          String
+    listViewOrder     Int       @default(0)
+    combinedViewOrder Int       @default(0)
+    dueDate           DateTime?
+    dateCompleted     DateTime?
+    isCompleted       Boolean   @default(false)
 
-  listId            Int
-  list              List               @relation(fields: [listId], references: [id])
-  taskTag           TaskTag[]
-  recurringSchedule RecurringSchedule?
+    listId            Int
+    list              List               @relation(fields: [listId], references: [id])
+    taskTag           TaskTag[]
+    recurringSchedule RecurringSchedule?
 }
 
 model RecurringSchedule {
-  id      Int                      @id @default(autoincrement())
-  task    Task                     @relation(fields: [taskId], references: [id]) // TODO: Define how to handle task deletion at the database level
-  cadence RecurringScheduleCadence
-  taskId  Int                      @unique
+    id      Int                      @id @default(autoincrement())
+    task    Task                     @relation(fields: [taskId], references: [id]) // TODO: Define how to handle task deletion at the database level
+    cadence RecurringScheduleCadence
+    taskId  Int                      @unique
 }
 
 model Tag {
-  id       Int    @id @default(autoincrement())
-  tagName  String
-  tagColor String
-  order    Int    @default(0)
+    id       Int    @id @default(autoincrement())
+    tagName  String
+    tagColor String
+    order    Int    @default(0)
 
-  userId  Int
-  user    User      @relation(fields: [userId], references: [id])
-  TaskTag TaskTag[]
+    userId  Int
+    user    User      @relation(fields: [userId], references: [id])
+    TaskTag TaskTag[]
 }
 
 model TaskTag {
-  taskId Int
-  task   Task @relation(fields: [taskId], references: [id])
+    taskId Int
+    task   Task @relation(fields: [taskId], references: [id])
 
-  tagId Int
-  tag   Tag @relation(fields: [tagId], references: [id])
+    tagId Int
+    tag   Tag @relation(fields: [tagId], references: [id])
 
-  @@id([taskId, tagId])
+    @@id([taskId, tagId])
 }
 
 model Feedback {
-  id      Int    @id @default(autoincrement())
-  message String
-  email   String
-  name    String
+    id      Int    @id @default(autoincrement())
+    message String
+    email   String
+    name    String
 }

@@ -24,7 +24,16 @@ app.get("/", async (req, res) => {
           listViewOrder: "asc",
         },
         where: {
-          isCompleted: false,
+          OR: [
+            {
+              isCompleted: false,
+            },
+            {
+              list: {
+                showCompletedTasks: true,
+              },
+            },
+          ],
         },
         include: {
           taskTag: {
