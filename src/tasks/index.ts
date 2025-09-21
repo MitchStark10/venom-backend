@@ -17,6 +17,7 @@ const includeOnTask = {
       userId: true,
       isStandupList: true,
       order: true,
+      showCompletedTasks: true,
     },
   },
   taskTag: {
