@@ -45,7 +45,7 @@ app.get("/", async (req, res) => {
 });
 
 app.put("/", async (req, res) => {
-  const { autoDeleteTasks, standupListIds, listsToShowCompletedTasksFor, dailyReportIgnoreWeekends } =
+  const { autoDeleteTasks, standupListIds, listsToShowCompletedTaskIds, dailyReportIgnoreWeekends } =
     req.body;
 
   const autoDeleteTasksEnumValue =
@@ -94,11 +94,11 @@ app.put("/", async (req, res) => {
     });
   }
 
-  if (listsToShowCompletedTasksFor) {
+  if (listsToShowCompletedTaskIds) {
     await extendedPrisma.list.updateMany({
       where: {
         id: {
-          in: listsToShowCompletedTasksFor,
+          in: listsToShowCompletedTaskIds,
         },
         userId: req.userId,
       },
@@ -110,7 +110,7 @@ app.put("/", async (req, res) => {
     await extendedPrisma.list.updateMany({
       where: {
         id: {
-            notIn: listsToShowCompletedTasksFor,
+            notIn: listsToShowCompletedTaskIds,
         },
         userId: req.userId,
       },
