@@ -299,7 +299,17 @@ export const getStandupTasks = async (userId: number, clientDate: string) => {
 
   const todayTaskList = await extendedPrisma.task.findMany({
     where: {
-      isCompleted: false,
+      OR: [
+        {
+          isCompleted: false,
+        },
+        {
+          dateCompleted: {
+            gte: todayDate,
+            lte: todayDate,
+          },
+        }
+      ],
       dueDate: {
         lt: tomorrowDate,
       },
