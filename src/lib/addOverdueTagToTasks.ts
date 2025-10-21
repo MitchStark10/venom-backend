@@ -19,7 +19,7 @@ export const addOverdueTagToTasks = (
   }
   
   return tasks.map((task) => {
-    if (task.dueDate && new Date(task.dueDate) < new Date(clientDate)) {
+    if (task.dueDate && new Date(task.dueDate) < new Date(clientDate) && !task.isCompleted) {
       return {
         ...task,
         taskTag: [
